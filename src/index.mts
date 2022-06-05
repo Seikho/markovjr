@@ -27,11 +27,12 @@ type Options = {
   freq?: number
 }
 
-type Sequence = [string, string]
-type Coord2d = [number, number]
+type Sequence = { from: string; to: string }
+type Point2D = { x: number; y: number }
 
-type Dir = 'l' | 'r' | 'u' | 'd'
-type Match = [Coord2d, Dir]
+type Dir2D = 'x-1' | 'x+1' | 'y-1' | 'y+1'
+type Shift = '/'
+type Match = { x: number; y: number; dir: Dir2D }
 
 export function generate(
   inputs: Input2d,
@@ -87,125 +88,155 @@ export function colorize(inputs: Input2d) {
   return outputs
 }
 
-function findMatches2D(inputs: Input2d, [from]: Sequence): Match[] {
-  validate2d(inputs)
+function findMatches2D(inputs: Input2d, seq: Sequence): Match[] {
+  validate2D(inputs)
 
   const matches: Match[] = []
 
-  const limit = {
-    x: inputs[0].length - from.length,
-    y: inputs.length - from.length,
-  }
-
   for (let y = 0; y < inputs.length; y++) {
-    const input = inputs[y]
-    const rev = reverse(input)
-
-    for (let x = 0; x < input.length; x++) {
-      if (x <= limit.x) {
-        if (isMatch(input.substring(x, x + from.length), from)) matches.push([[x, y], 'r'])
-        if (isMatch(rev.substring(x, x + from.length), from)) matches.push([[x, y], 'l'])
-      }
-    }
-  }
-
-  for (let x = 0; x < inputs[0].length; x++) {
-    const input = column(inputs, x)
-    const rev = reverse(input)
-
-    for (let y = 0; y < input.length; y++) {
-      if (y <= limit.y) {
-        if (isMatch(input.slice(y, y + from.length), from)) matches.push([[x, y], 'd'])
-        if (isMatch(rev.slice(y, y + from.length), from)) matches.push([[x, y], 'u'])
-      }
+    for (let x = 0; x < inputs[0].length; x++) {
+      matches.push(...findMatchesAt2D(inputs, seq, x, y))
     }
   }
 
   return matches
 }
 
-function ruleSequence(rule: Rule) {
-  const pairs = rule.split(' ')
-  const sets = pairs.map((pair) => pair.split('=') as [string, string])
-  return sets
+const DIR_2D: Dir2D[] = ['x+1', 'x-1', 'y+1', 'y-1']
+
+function findMatchesAt2D(inputs: Input2d, { from }: Sequence, x: number, y: number) {
+  const matches: Match[] = []
+  const start = { x, y }
+
+  for (const dir of DIR_2D) {
+    let curr: Point2D | undefined = { x, y }
+    let matched = true
+
+    for (let i = 0; i < from.length; i++) {
+      let char = from[i]
+      const next = next2D(inputs, start, curr, dir, char)
+
+      if (isShift(char)) char = from[++i]
+
+      if (!next) {
+        if (i <= from.length - 2) matched = false
+        break
+      }
+
+      if (char !== '*' && char !== inputs[curr.y][curr.x]) {
+        matched = false
+        break
+      }
+
+      curr = next
+    }
+
+    if (matched) {
+      matches.push({ x, y, dir })
+    }
+  }
+
+  return matches
 }
 
-function applyRule(inputs: Input2d, [from, to]: Sequence, [[x, y], dir]: Match) {
-  const L = from.length
+function isShift(text: string): text is Shift {
+  return text === '/'
+}
+
+function next2D(inputs: Input2d, start: Point2D, curr: Point2D, dir: Dir2D, char: string) {
+  let point: Point2D | undefined
+
+  if (isShift(char)) {
+    point = shift2D(start, curr, dir)
+  }
+
+  if (!point) {
+    switch (dir) {
+      case 'x-1': {
+        point = { x: curr.x - 1, y: curr.y }
+        break
+      }
+
+      case 'x+1': {
+        point = { x: curr.x + 1, y: curr.y }
+        break
+      }
+
+      case 'y-1': {
+        point = { x: curr.x, y: curr.y - 1 }
+        break
+      }
+
+      case 'y+1': {
+        point = { x: curr.x, y: curr.y + 1 }
+        break
+      }
+    }
+  }
+
+  if (point.x < 0 || point.y < 0 || point.x >= inputs[0].length || point.y >= inputs.length) return
+
+  return point
+}
+
+function shift2D(start: Point2D, curr: Point2D, dir: Dir2D) {
+  let point: Point2D
+
   switch (dir) {
-    case 'l': {
-      const input = reverse(inputs[y])
-      inputs[y] = reverse(input.slice(0, x) + swap(input.slice(x, x + L), to) + input.slice(x + L))
-      return inputs
-    }
+    case 'x-1':
+      point = { x: start.x, y: curr.y - 1 }
+      break
 
-    case 'r': {
-      const input = inputs[y]
-      inputs[y] = input.slice(0, x) + swap(input.slice(x, x + L), to) + input.slice(x + L)
-      return inputs
-    }
+    case 'x+1':
+      point = { x: start.x, y: curr.y + 1 }
+      break
 
-    case 'u': {
-      const input = reverse(column(inputs, x))
-      const next = reverse(input.slice(0, y) + swap(input.slice(y, y + L), to) + input.slice(y + L))
-      for (let ny = 0; ny < input.length; ny++) {
-        inputs[ny] = inputs[ny].slice(0, x) + next[ny] + inputs[ny].slice(x + 1)
-      }
-      return inputs
-    }
+    case 'y-1':
+      point = { x: curr.x + 1, y: start.y }
+      break
 
-    case 'd': {
-      const input = column(inputs, x)
-      const next = input.slice(0, y) + swap(input.slice(y, y + L), to) + input.slice(y + L)
-      for (let ny = 0; ny < input.length; ny++) {
-        inputs[ny] = inputs[ny].slice(0, x) + next[ny] + inputs[ny].slice(x + 1)
-      }
-      return inputs
-    }
+    case 'y+1':
+      point = { x: curr.x - 1, y: start.y }
+      break
+  }
+
+  return point
+}
+
+function ruleSequence(rule: Rule): Sequence[] {
+  const rules = rule.split(' ')
+  const seqs: Sequence[] = []
+  for (const rule of rules) {
+    const pair = rule.split('=')
+    seqs.push({ from: pair[0], to: pair[1] })
+  }
+  return seqs
+}
+
+function applyRule(inputs: Input2d, { from, to }: Sequence, { x, y, dir }: Match) {
+  const start = { x, y }
+  let curr = { x, y }
+
+  for (let i = 0; i < from.length; i++) {
+    let char = to[i]
+    if (isShift(char)) char = to[++i]
+
+    inputs[curr.y] = replace(inputs[curr.y], curr.x, char)
+    curr = next2D(inputs, start, curr, dir, char)!
   }
 }
 
-function validate2d(inputs: Input2d) {
+function replace(text: string, pos: number, char: string) {
+  if (char === '*') char = text[pos]
+  return text.slice(0, pos) + char + text.slice(pos + 1)
+}
+
+function validate2D(inputs: Input2d) {
   const length = inputs[0].length
   for (const input of inputs) {
-    if (input.length !== length) throw new Error('2D Input is not uniform')
+    if (input.length !== length) {
+      console.log(inputs)
+      throw new Error('2D Input is not uniform')
+    }
   }
-}
-
-function swap(from: string, to: string) {
-  if (to.includes('*') === false) return to
-
-  let swapped = ''
-  for (let i = 0; i < from.length; i++) {
-    swapped += to[i] === '*' ? from[i] : to[i]
-  }
-
-  return swapped
-}
-
-function isMatch(left: string, right: string) {
-  for (let i = 0; i < left.length; i++) {
-    if (left[i] === '*' || right[i] === '*') continue
-    if (left[i] !== right[i]) return false
-  }
-
-  return true
-}
-
-function reverse(text: string) {
-  let output = ''
-  for (let i = 0; i < text.length; i++) {
-    output += text[text.length - 1 - i]
-  }
-  return output
-}
-
-function column(input: Input2d, x: number) {
-  let output = ''
-
-  for (let y = 0; y < input.length; y++) {
-    output += input[y][x]
-  }
-
-  return output
 }

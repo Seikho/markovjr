@@ -17,7 +17,7 @@ const start = {
 
 const map: { [key: string]: () => Config } = {
   growth: () => ({ input: grid([9, 9]), rules: ['WB=WW'] }),
-  maze: () => ({ input: grid(), rules: ['WBB=WAW'] }),
+  maze: () => ({ input: grid([2, 2], [40, 21]), rules: ['WBB=WAW'] }),
   bigmaze: () => ({ input: grid([0, 0], grids.big), rules: ['WBB=WAW'] }),
   biggrowth: () => ({ input: grid(start.big, grids.big), rules: ['WB=WW'] }),
 }
@@ -29,13 +29,13 @@ if (!func) throw new Error(`Cannot find match for "arg"`)
 
 const { input, rules } = func()
 
-const output = colorize(generate(input, rules, { end: 100000, print: true, freq: 10 }))
+const output = colorize(generate(input, rules, { end: 100000, print: true, freq: 1 }))
 
 console.clear()
 console.log(output.toString())
 console.log(arg)
 
-function grid([x, y]: Coord = [20, 20], [w, h]: Coord = [0, 0]) {
+function grid([x, y]: Coord = [0, 0], [w, h]: Coord = [20, 20]) {
   const input: string[] = []
 
   for (let i = 0; i < h; i++) {
@@ -44,8 +44,4 @@ function grid([x, y]: Coord = [20, 20], [w, h]: Coord = [0, 0]) {
   }
 
   return input
-}
-
-function biggrid([x, y] = [0, 0]) {
-  return grid([x, y], [Math.floor(process.stdout.columns / 2), Math.floor(process.stdout.rows / 2)])
 }
