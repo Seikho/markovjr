@@ -77,7 +77,7 @@ export function colorize(inputs: Input2d) {
     for (let x = 0; x < input.length; x++) {
       output += color[input[x]] ? color[input[x]](' ') : chalk.reset(input[x])
     }
-    outputs.push(output)
+    outputs.push('|' + output + '|')
   }
 
   outputs.toString = () => {
@@ -109,26 +109,24 @@ function findMatchesAt2D(inputs: Input2d, { from }: Sequence, x: number, y: numb
   const start = { x, y }
 
   for (const dir of DIR_2D) {
-    let curr: Point2D | undefined = { x, y }
+    let curr: Point2D | undefined
     let matched = true
 
     for (let i = 0; i < from.length; i++) {
       let char = from[i]
-      const next = next2D(inputs, start, curr, dir, char)
+      curr = !curr ? { x, y } : next2D(inputs, start, curr, dir, char)
 
-      if (isShift(char)) char = from[++i]
-
-      if (!next) {
-        if (i <= from.length - 2) matched = false
+      if (!curr) {
+        matched = false
         break
       }
+
+      if (isShift(char)) char = from[++i]
 
       if (char !== '*' && char !== inputs[curr.y][curr.x]) {
         matched = false
         break
       }
-
-      curr = next
     }
 
     if (matched) {
@@ -215,14 +213,14 @@ function ruleSequence(rule: Rule): Sequence[] {
 
 function applyRule(inputs: Input2d, { from, to }: Sequence, { x, y, dir }: Match) {
   const start = { x, y }
-  let curr = { x, y }
+  let curr: Point2D | undefined
 
   for (let i = 0; i < from.length; i++) {
     let char = to[i]
+    curr = !curr ? { x, y } : next2D(inputs, start, curr, dir, char)!
     if (isShift(char)) char = to[++i]
 
     inputs[curr.y] = replace(inputs[curr.y], curr.x, char)
-    curr = next2D(inputs, start, curr, dir, char)!
   }
 }
 
@@ -235,7 +233,6 @@ function validate2D(inputs: Input2d) {
   const length = inputs[0].length
   for (const input of inputs) {
     if (input.length !== length) {
-      console.log(inputs)
       throw new Error('2D Input is not uniform')
     }
   }
