@@ -19,7 +19,7 @@ const color: { [char: string]: ChalkInstance } = {
   F: chalk.bgHex('#FFCAA8'),
 }
 
-export type Rule = string
+export type Rule = string | string[]
 export type Input2d = string[]
 type Options = {
   end?: number
@@ -27,27 +27,34 @@ type Options = {
   freq?: number
 }
 
-type Sequence = { from: string; to: string }
+type Sequence = { from: string; to: string; max?: number; count: number }
 type Point2D = { x: number; y: number }
 
 type Dir2D = 'x-1' | 'x+1' | 'y-1' | 'y+1'
 type Shift = '/'
 type Match = { x: number; y: number; dir: Dir2D }
 
-export function generate(
-  inputs: Input2d,
-  rules: Rule[],
-  { end = Infinity, print = false, freq = 1 }: Options = {}
-): Input2d {
+export async function generate(inputs: Input2d, rules: Rule[], opts: Options = {}): Promise<Input2d> {
+  if (!opts.end) opts.end = Infinity
+  if (!opts.freq) opts.freq = 1
+
   const sequences = rules.map(ruleSequence)
   let count = 0
 
   for (const sequence of sequences) {
     while (true) {
-      if (count >= end) return inputs
+      if (count >= opts.end) return inputs
 
       let matched = false
+
       for (const seq of sequence) {
+        seq.count++
+
+        if (seq.max && seq.count > seq.max) {
+          matched = false
+          break
+        }
+
         const matches = findMatches2D(inputs, seq)
         if (matches.length === 0) continue
 
@@ -57,11 +64,13 @@ export function generate(
         const match = matches[random]
         applyRule(inputs, seq, match)
 
-        if (print && count % freq === 0) {
+        if (opts.print && count % opts.freq === 0) {
+          await sleep()
           console.clear()
           console.log(colorize(inputs).toString())
         }
       }
+
       if (!matched) break
     }
   }
@@ -100,6 +109,10 @@ function findMatches2D(inputs: Input2d, seq: Sequence): Match[] {
   }
 
   return matches
+}
+
+function sleep() {
+  return new Promise((resolve) => setTimeout(resolve, 16))
 }
 
 const DIR_2D: Dir2D[] = ['x+1', 'x-1', 'y+1', 'y-1']
@@ -201,13 +214,21 @@ function shift2D(start: Point2D, curr: Point2D, dir: Dir2D) {
   return point
 }
 
-function ruleSequence(rule: Rule): Sequence[] {
-  const rules = rule.split(' ')
+function ruleSequence(rules: Rule): Sequence[] {
+  const list = Array.isArray(rules) ? rules : [rules]
   const seqs: Sequence[] = []
-  for (const rule of rules) {
-    const pair = rule.split('=')
-    seqs.push({ from: pair[0], to: pair[1] })
+
+  for (const rule of list) {
+    const [instruction, steps] = rule.split(' ')
+    const pair = instruction.split('=')
+
+    if (steps && !steps.startsWith('#')) throw new Error(`Steps must start with '#'`)
+
+    const max = steps ? Number(steps.slice(1)) : undefined
+    console.log(rule, instruction, steps)
+    seqs.push({ from: pair[0], to: pair[1], max, count: 0 })
   }
+
   return seqs
 }
 

@@ -1,7 +1,4 @@
-import { colorize, generate, Input2d, Rule } from './index.mjs'
-
-type Config = { input: Input2d; rules: Rule[] }
-type Coord = [number, number] | readonly [number, number]
+import { draw } from './helper.mjs'
 
 const grids = {
   small: [40, 20],
@@ -31,29 +28,3 @@ if (!func) throw new Error(`Cannot find match for "arg"`)
 
 func()
 console.log(arg)
-
-type DrawOpts = {
-  start?: Coord
-  size?: Coord
-  char?: string
-  rules: Rule[]
-}
-
-function draw(opts: DrawOpts) {
-  const { start = [0, 0], size = [40, 20], char = 'W', rules } = opts
-  const [x, y] = start
-  const [w, h] = size
-
-  const input: string[] = []
-
-  for (let i = 0; i < h; i++) {
-    if (i === y) input.push('B'.repeat(x) + char + 'B'.repeat(w - x - 1))
-    else input.push('B'.repeat(w))
-  }
-
-  const output = generate(input, rules, { end: 100000, print: true, freq: 1 })
-  console.clear()
-  console.log(colorize(output).toString())
-
-  return output
-}
