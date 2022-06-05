@@ -1,12 +1,12 @@
 {
   "name": "markovjr",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "main": "build/index.mjs",
-  "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node build/example.mjs"
+    "start": "node build/example.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,10 @@
     "typescript": "^4.7.3"
   },
   "dependencies": {
-    "chalk": "^5.0.1"
-  }
+    "chalk": "4"
+  },
+  "files": [
+    "build/**",
+    "src/**"
+  ]
 }

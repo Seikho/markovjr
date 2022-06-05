@@ -1,4 +1,4 @@
-import { colorize, generate, Input2d, Rule } from './index.mjs'
+import { colorize, generate, Input2d, Rule } from './index.js'
 
 type Coord = [number, number] | readonly [number, number]
 

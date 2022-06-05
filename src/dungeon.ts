@@ -1,5 +1,5 @@
-import { grid, pretty } from './helper.mjs'
-import { generate } from './index.mjs'
+import { grid, pretty } from './helper.js'
+import { generate } from './index.js'
 
 console.clear()
 
@@ -16,5 +16,5 @@ generate(
     ['G=W'],
     ['BBB/BWB=BBB/BBB'],
   ],
-  { freq: 1, print: true }
+  { freq: 5, print: true }
 ).then(pretty)

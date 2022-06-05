@@ -1,4 +1,4 @@
-import { draw } from './helper.mjs'
+import { draw } from './helper.js'
 
 const grids = {
   small: [40, 20],

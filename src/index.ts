@@ -1,6 +1,8 @@
-import chalk, { ChalkInstance } from 'chalk'
+import chalk from 'chalk'
 
-const color: { [char: string]: ChalkInstance } = {
+console.log(chalk)
+
+const color: { [char: string]: chalk.Chalk } = {
   B: chalk.bgBlack,
   I: chalk.bgBlue,
   P: chalk.bgMagenta,
@@ -112,7 +114,7 @@ function findMatches2D(inputs: Input2d, seq: Sequence): Match[] {
 }
 
 function sleep() {
-  return new Promise((resolve) => setTimeout(resolve, 16))
+  return new Promise((resolve) => setTimeout(resolve, 1000 / 144))
 }
 
 const DIR_2D: Dir2D[] = ['x+1', 'x-1', 'y+1', 'y-1']
