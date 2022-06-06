@@ -1,10 +1,10 @@
-import { grid, pretty } from './helper.js'
+import { grid2D, pretty } from './helper.js'
 import { generate } from './index.js'
 
 console.clear()
 
 const result = generate({
-  grid: grid({ start: [1, 1], size: [60, 40], char: 'P' }),
+  grid: grid2D({ start: [1, 1], size: [100, 40], char: 'P' }),
   rules: [
     'PBB=**P',
     'BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #10',

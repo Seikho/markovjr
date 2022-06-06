@@ -1,5 +1,6 @@
-import { colorize, generate } from '.'
-import { Input2D, Rule } from './types'
+import { generate } from '.'
+import { Grid, Rule } from './types'
+import { color, reset } from './util'
 
 type Coord = [number, number] | readonly [number, number]
 
@@ -10,7 +11,30 @@ type DrawOpts = {
   rules: Rule[]
 }
 
-export function grid(opts: Omit<DrawOpts, 'rules'>) {
+export function colorize(grid: Grid) {
+  if (grid.type === '2d') {
+    const outputs: string[] = []
+    for (let y = 0; y < grid.input.length; y++) {
+      let output = ''
+      const input = grid.input[y]
+      for (let x = 0; x < input.length; x++) {
+        output += color[input[x]] ? color[input[x]](' ') : reset(input[x])
+      }
+      outputs.push('|' + output + '|')
+    }
+
+    outputs.toString = () => {
+      const output = outputs.join('\n')
+      return output
+    }
+
+    return outputs
+  }
+
+  throw new Error('3D not yet supported')
+}
+
+export function grid2D(opts: Omit<DrawOpts, 'rules'>): Grid {
   const { start = [0, 0], size = [40, 20], char = 'W' } = opts
   const [x, y] = start
   const [w, h] = size
@@ -22,19 +46,24 @@ export function grid(opts: Omit<DrawOpts, 'rules'>) {
     else input.push('B'.repeat(w))
   }
 
-  return input
+  return { input: input, type: '2d' }
 }
 
 export function draw(opts: DrawOpts) {
-  const input = grid(opts)
-  const output = generate({ grid: input, rules: opts.rules, log: { frequency: 1 } })
-  console.clear()
-  console.log(colorize(output).toString())
+  const input = grid2D(opts)
+  const grid = generate({ grid: input, rules: opts.rules, log: { frequency: 1 } })
 
-  return output
+  pretty(grid)
+
+  return grid
 }
 
-export function pretty(inputs: Input2D) {
-  console.clear()
-  console.log(colorize(inputs).toString())
+export function pretty(grid: Grid) {
+  const colors = colorize(grid)
+
+  for (let i = 0; i < colors.length; i++) {
+    process.stdout.cursorTo(0, i)
+    process.stdout.clearLine(0)
+    process.stdout.write(colors[i] + '\n')
+  }
 }

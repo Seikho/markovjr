@@ -27,4 +27,3 @@ const func = map[arg]
 if (!func) throw new Error(`Cannot find match for "arg"`)
 
 func()
-console.log(arg)
