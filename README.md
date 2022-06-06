@@ -79,3 +79,7 @@ type Coord3D = [number, number, number]
   - Generate black 2D grids with a single `W` character at the `start` coordinate
 - `grid3D({ size: Coord3D, start: Coord3D, char?: string })`
   - Generate black 3D grids with a single `W` character at the `start` coordinate
+
+### License
+
+MIT

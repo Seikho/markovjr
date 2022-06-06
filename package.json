@@ -1,6 +1,6 @@
 {
   "name": "markovjr",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^17.0.39",
     "@types/react": "^18.0.12",
