@@ -11,6 +11,8 @@
     "sourceMap": true,
     "outDir": "build",
     "declaration": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react"
   }
 }
