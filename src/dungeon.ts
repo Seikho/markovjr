@@ -3,11 +3,11 @@ import { generate } from './index.js'
 
 console.clear()
 
-generate(
-  grid({ start: [1, 1], size: [60, 40], char: 'P' }),
-  [
+const result = generate({
+  grid: grid({ start: [1, 1], size: [60, 40], char: 'P' }),
+  rules: [
     'PBB=**P',
-    'BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #15',
+    'BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #10',
     ['RBP=GGR', 'GGR=RWW', 'P=R'],
     ['R=G #1'],
     ['R=W'],
@@ -16,5 +16,7 @@ generate(
     ['G=W'],
     ['BBB/BWB=BBB/BBB'],
   ],
-  { freq: 5, print: true }
-).then(pretty)
+  log: { frequency: 5 },
+})
+
+pretty(result)

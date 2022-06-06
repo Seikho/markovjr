@@ -1,4 +1,5 @@
-import { colorize, generate, Input2d, Rule } from './index.js'
+import { colorize, generate } from '.'
+import { Input2D, Rule } from './types'
 
 type Coord = [number, number] | readonly [number, number]
 
@@ -24,16 +25,16 @@ export function grid(opts: Omit<DrawOpts, 'rules'>) {
   return input
 }
 
-export async function draw(opts: DrawOpts) {
+export function draw(opts: DrawOpts) {
   const input = grid(opts)
-  const output = await generate(input, opts.rules, { end: 100000, print: true, freq: 1 })
+  const output = generate({ grid: input, rules: opts.rules, log: { frequency: 1 } })
   console.clear()
   console.log(colorize(output).toString())
 
   return output
 }
 
-export async function pretty(inputs: Promise<Input2d> | Input2d) {
+export function pretty(inputs: Input2D) {
   console.clear()
-  console.log(colorize(await inputs).toString())
+  console.log(colorize(inputs).toString())
 }

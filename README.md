@@ -7,5 +7,3 @@
 ```
 
 ## API
-
-Coming soon

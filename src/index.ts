@@ -1,4 +1,5 @@
-import chalk from 'chalk'
+import * as chalk from 'chalk'
+import { Input2D, Model, Rule } from './types'
 
 console.log(chalk)
 
@@ -21,14 +22,6 @@ const color: { [char: string]: chalk.Chalk } = {
   F: chalk.bgHex('#FFCAA8'),
 }
 
-export type Rule = string | string[]
-export type Input2d = string[]
-type Options = {
-  end?: number
-  print?: boolean
-  freq?: number
-}
-
 type Sequence = { from: string; to: string; max?: number; count: number }
 type Point2D = { x: number; y: number }
 
@@ -36,17 +29,13 @@ type Dir2D = 'x-1' | 'x+1' | 'y-1' | 'y+1'
 type Shift = '/'
 type Match = { x: number; y: number; dir: Dir2D }
 
-export async function generate(inputs: Input2d, rules: Rule[], opts: Options = {}): Promise<Input2d> {
-  if (!opts.end) opts.end = Infinity
-  if (!opts.freq) opts.freq = 1
-
-  const sequences = rules.map(ruleSequence)
+export function generate(model: Model) {
+  const freq = model.log?.frequency
+  const sequences = model.rules.map(getSequences)
   let count = 0
 
   for (const sequence of sequences) {
     while (true) {
-      if (count >= opts.end) return inputs
-
       let matched = false
 
       for (const seq of sequence) {
@@ -57,19 +46,18 @@ export async function generate(inputs: Input2d, rules: Rule[], opts: Options = {
           break
         }
 
-        const matches = findMatches2D(inputs, seq)
+        const matches = findMatches2D(model.grid, seq)
         if (matches.length === 0) continue
 
         count++
         matched = true
         const random = Math.floor(Math.random() * matches.length)
         const match = matches[random]
-        applyRule(inputs, seq, match)
+        applyRule(model.grid, seq, match)
 
-        if (opts.print && count % opts.freq === 0) {
-          await sleep()
+        if (freq && count % freq === 0) {
           console.clear()
-          console.log(colorize(inputs).toString())
+          console.log(colorize(model.grid).toString())
         }
       }
 
@@ -77,11 +65,11 @@ export async function generate(inputs: Input2d, rules: Rule[], opts: Options = {
     }
   }
 
-  return inputs
+  return model.grid
 }
 
-export function colorize(inputs: Input2d) {
-  const outputs: Input2d = []
+export function colorize(inputs: Input2D) {
+  const outputs: Input2D = []
   for (let y = 0; y < inputs.length; y++) {
     let output = ''
     const input = inputs[y]
@@ -99,8 +87,8 @@ export function colorize(inputs: Input2d) {
   return outputs
 }
 
-function findMatches2D(inputs: Input2d, seq: Sequence): Match[] {
-  validate2D(inputs)
+function findMatches2D(inputs: Input2D, seq: Sequence): Match[] {
+  validateGrid(inputs)
 
   const matches: Match[] = []
 
@@ -113,13 +101,9 @@ function findMatches2D(inputs: Input2d, seq: Sequence): Match[] {
   return matches
 }
 
-function sleep() {
-  return new Promise((resolve) => setTimeout(resolve, 1000 / 144))
-}
-
 const DIR_2D: Dir2D[] = ['x+1', 'x-1', 'y+1', 'y-1']
 
-function findMatchesAt2D(inputs: Input2d, { from }: Sequence, x: number, y: number) {
+function findMatchesAt2D(inputs: Input2D, { from }: Sequence, x: number, y: number) {
   const matches: Match[] = []
   const start = { x, y }
 
@@ -156,7 +140,7 @@ function isShift(text: string): text is Shift {
   return text === '/'
 }
 
-function next2D(inputs: Input2d, start: Point2D, curr: Point2D, dir: Dir2D, char: string) {
+function next2D(inputs: Input2D, start: Point2D, curr: Point2D, dir: Dir2D, char: string) {
   let point: Point2D | undefined
 
   if (isShift(char)) {
@@ -216,7 +200,10 @@ function shift2D(start: Point2D, curr: Point2D, dir: Dir2D) {
   return point
 }
 
-function ruleSequence(rules: Rule): Sequence[] {
+const VALID_SEQ = /[BIPENDAWROYGUSKF\/]+/
+const VALID_GRID = /[BIPENDAWROYGUSKF\/]+/
+
+function getSequences(rules: Rule): Sequence[] {
   const list = Array.isArray(rules) ? rules : [rules]
   const seqs: Sequence[] = []
 
@@ -226,6 +213,10 @@ function ruleSequence(rules: Rule): Sequence[] {
 
     if (steps && !steps.startsWith('#')) throw new Error(`Steps must start with '#'`)
 
+    if (!VALID_SEQ.test(pair[0]) || !VALID_SEQ.test(pair[0])) {
+      throw new Error(`Sequences can only contain characters: {BIPENDAWROYGUSKF/}`)
+    }
+
     const max = steps ? Number(steps.slice(1)) : undefined
     console.log(rule, instruction, steps)
     seqs.push({ from: pair[0], to: pair[1], max, count: 0 })
@@ -234,7 +225,7 @@ function ruleSequence(rules: Rule): Sequence[] {
   return seqs
 }
 
-function applyRule(inputs: Input2d, { from, to }: Sequence, { x, y, dir }: Match) {
+function applyRule(inputs: Input2D, { from, to }: Sequence, { x, y, dir }: Match) {
   const start = { x, y }
   let curr: Point2D | undefined
 
@@ -252,11 +243,15 @@ function replace(text: string, pos: number, char: string) {
   return text.slice(0, pos) + char + text.slice(pos + 1)
 }
 
-function validate2D(inputs: Input2d) {
+function validateGrid(inputs: Input2D) {
   const length = inputs[0].length
   for (const input of inputs) {
+    if (!VALID_GRID.test(input)) {
+      throw new Error(`Grid row contains invalid characters. May only contain "BIPENDAWROYGUSKF" `)
+    }
+
     if (input.length !== length) {
-      throw new Error('2D Input is not uniform')
+      throw new Error('2D grid is not uniform')
     }
   }
 }
