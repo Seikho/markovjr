@@ -9,10 +9,10 @@
       "request": "launch",
       "name": "Launch Program",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/src/example.mts",
+      "program": "${workspaceFolder}/src/example.ts",
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/build/**/*.js"],
-      "args": ["maze"]
+      "args": ["maze3d"]
     }
   ]
 }

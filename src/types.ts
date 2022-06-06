@@ -1,9 +1,17 @@
-export type Model = {
-  grid: Grid
+export type Model = Model2D | Model3D
+
+export type Model2D = {
+  type: '2d'
+  grid: Grid2D
   rules: Rule[]
-  log?: {
-    frequency: number
-  }
+  log?: { frequency: number }
+}
+
+export type Model3D = {
+  type: '3d'
+  grid: Grid3D
+  rules: Rule[]
+  log?: { frequency: number }
 }
 
 export type Grid = Grid2D | Grid3D

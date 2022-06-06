@@ -61,8 +61,9 @@ export function findMatches(grid: Grid, seq: Sequence): Match[] {
 
   for (let z = 0; z < grid.input.length; z++) {
     for (let y = 0; y < grid.input[0].length; y++) {
-      for (let x = 0; z < grid.input[0][0].length; x++) {
+      for (let x = 0; x < grid.input[0][0].length; x++) {
         matches.push(...findMatchesAt3D(grid.input, seq, x, y, z))
+        // console.log(matches.length, { x, y, z })
       }
     }
   }
@@ -122,7 +123,7 @@ function findMatchesAt3D(inputs: Input3D, { from }: Sequence, x: number, y: numb
 
       if (isShift(char)) char = from[++i]
 
-      if (char !== '*' && char !== inputs[curr.y][curr.x]) {
+      if (char !== '*' && char !== inputs[curr.z][curr.y][curr.x]) {
         matched = false
         break
       }
@@ -237,7 +238,15 @@ function next3D(inputs: Input3D, start: Point3D, curr: Point3D, dir: Dir3D, char
     }
   }
 
-  if (point.x < 0 || point.y < 0 || point.x >= inputs[0].length || point.y >= inputs.length) return
+  if (
+    point.x < 0 ||
+    point.y < 0 ||
+    point.z < 0 ||
+    point.x >= inputs[0][0].length ||
+    point.y >= inputs[0].length ||
+    point.z >= inputs.length
+  )
+    return
   return point
 }
 

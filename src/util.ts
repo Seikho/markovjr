@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { Color } from './types'
+import { Color, Model2D, Model3D } from './types'
 
 export const terminal: { [char in Color]: chalk.Chalk } = {
   B: chalk.bgBlack,
@@ -41,4 +41,26 @@ export const hexColor: { [char in Color]: number } = {
 
 export function reset(text: string) {
   return chalk.reset(text)
+}
+
+export function iterate2D(model: Model2D, iterator: (x: number, y: number, color: Color) => void): Model2D {
+  for (let y = 0; y < model.grid.input.length; y++) {
+    for (let x = 0; x < model.grid.input[0].length; x++) {
+      iterator(x, y, model.grid.input[y][x] as Color)
+    }
+  }
+
+  return model
+}
+
+export function iterate3D(model: Model3D, iterator: (x: number, y: number, z: number, color: Color) => void): Model3D {
+  for (let z = 0; z < model.grid.input.length; z++) {
+    for (let y = 0; y < model.grid.input[0].length; y++) {
+      for (let x = 0; x < model.grid.input[0][0].length; x++) {
+        iterator(x, y, z, model.grid.input[z][y][x] as Color)
+      }
+    }
+  }
+
+  return model
 }

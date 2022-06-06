@@ -1,6 +1,6 @@
 import { generate } from './generate'
-import { Color, Grid, Input2D, Input3D, Rule } from './types'
-import { terminal, reset } from './util'
+import { Grid2D, Grid3D, Input2D, Input3D, Model, Rule } from './types'
+import { terminal, reset, iterate3D, iterate2D } from './util'
 
 type Coord = [number, number] | readonly [number, number]
 type Coord3D = [number, number, number] | readonly [number, number, number]
@@ -12,17 +12,22 @@ type DrawOpts = {
   rules: Rule[]
 }
 
-export function colorize(grid: Grid) {
-  if (grid.type === '2d') {
+export function colorize(model: Model) {
+  if (model.type === '2d') {
+    let cy: number
     const outputs: string[] = []
-    for (let y = 0; y < grid.input.length; y++) {
-      let output = ''
-      const input = grid.input[y]
-      for (let x = 0; x < input.length; x++) {
-        output += terminal[input[x] as Color] ? terminal[input[x] as Color](' ') : reset(input[x])
+    let output = ''
+
+    iterate2D(model, (_, y, color) => {
+      if (cy === undefined) cy = y
+      if (y !== cy) {
+        outputs.push(output)
+        output = ''
+        cy = y
       }
-      outputs.push('|' + output + '|')
-    }
+
+      output += terminal[color] ? terminal[color](' ') : reset(color)
+    })
 
     outputs.toString = () => {
       const output = outputs.join('\n')
@@ -32,10 +37,46 @@ export function colorize(grid: Grid) {
     return outputs
   }
 
-  throw new Error('3D not yet supported')
+  const outputs: Array<string[]> = []
+  let cz: number
+  let cy: number
+
+  let outputY: string[] = []
+  let output = ''
+
+  iterate3D(model, (_, y, z, color) => {
+    if (cz === undefined) cz = z
+    if (cy === undefined) cy = y
+
+    if (cy !== y) {
+      outputY.push(output)
+      output = ''
+      cy = y
+    }
+
+    if (cz !== z) {
+      outputs.push(outputY)
+      outputY = []
+      cz = z
+    }
+
+    output += terminal[color] ? terminal[color](' ') : reset(color)
+  })
+
+  outputs.toString = () => {
+    let all = ''
+
+    for (const z of outputs) {
+      all += z.join('\n') + '\n' + '\n'
+    }
+
+    return all
+  }
+
+  return outputs
 }
 
-export function grid2D(opts: Omit<DrawOpts, 'rules'>): Grid {
+export function grid2D(opts: Omit<DrawOpts, 'rules'>): Grid2D {
   const { start = [0, 0], size = [40, 20], char = 'W' } = opts
   const [x, y] = start
   const [w, h] = size
@@ -50,7 +91,7 @@ export function grid2D(opts: Omit<DrawOpts, 'rules'>): Grid {
   return { input, type: '2d' }
 }
 
-export function grid3D(opts: { start: Coord3D; size: Coord3D; char?: string }): Grid {
+export function grid3D(opts: { start: Coord3D; size: Coord3D; char?: string }): Grid3D {
   const { start = [0, 0, 0], size = [40, 40, 40], char = 'W' } = opts
   const [x, y, z] = start
   const [w, h, d] = size
@@ -71,15 +112,15 @@ export function grid3D(opts: { start: Coord3D; size: Coord3D; char?: string }): 
 
 export function draw(opts: DrawOpts) {
   const input = grid2D(opts)
-  const grid = generate({ grid: input, rules: opts.rules, log: { frequency: 1 } })
+  const model = generate({ type: '2d', grid: input, rules: opts.rules, log: { frequency: 1 } })
 
-  pretty(grid)
+  pretty(model)
 
-  return grid
+  return model
 }
 
-export function pretty(grid: Grid) {
-  const colors = colorize(grid)
+export function pretty(model: Model) {
+  const colors = colorize(model)
 
   for (let i = 0; i < colors.length; i++) {
     process.stdout.cursorTo(0, i)

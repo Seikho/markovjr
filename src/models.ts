@@ -1,8 +1,9 @@
-import { grid2D } from './helper'
+import { grid2D, grid3D } from './helper'
 import { Model } from './types'
 
 export function dungeon2D(): Model {
   return {
+    type: '2d',
     grid: grid2D({ start: [1, 1], size: [100, 60], char: 'P' }),
     rules: [
       'PBB=**P',
@@ -17,5 +18,21 @@ export function dungeon2D(): Model {
       ['G=W'],
       ['BBB/BWB=BBB/BBB'],
     ],
+  }
+}
+
+export function maze2D(): Model {
+  return {
+    type: '2d',
+    grid: grid2D({ size: [20, 20], start: [1, 1] }),
+    rules: ['WBB=WAW'],
+  }
+}
+
+export function maze3D(): Model {
+  return {
+    type: '3d',
+    grid: grid3D({ size: [20, 20, 20], start: [1, 1, 1] }),
+    rules: ['WBB=WAW'],
   }
 }

@@ -31,7 +31,7 @@ export function generate(model: Model) {
         applyRule(model.grid, seq, match)
 
         if (freq && count % freq === 0) {
-          pretty(model.grid)
+          pretty(model)
         }
       }
 
@@ -39,7 +39,7 @@ export function generate(model: Model) {
     }
   }
 
-  return model.grid
+  return model
 }
 
 const VALID_SEQ = /[BIPENDAWROYGUSKF\/]+/

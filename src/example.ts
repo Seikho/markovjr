@@ -1,4 +1,5 @@
-import { draw } from './helper.js'
+import { generate } from './generate.js'
+import { colorize, draw, grid3D } from './helper.js'
 
 const grids = {
   small: [40, 20],
@@ -19,6 +20,15 @@ const map: { [key: string]: () => void } = {
   biggrowth: () => draw({ start: start.big, size: grids.big, rules: ['WB=WW'] }),
   floor: () => draw({ start: [1, 1], size: [60, 40], rules: ['PBB=**P'], char: 'P' }),
   squares: () => draw({ start: [1, 1], size: [40, 20], rules: ['BBBB/BBBB/BBBB/BBBB=BBBB/BWWB/BWWB/BBBB'], char: 'B' }),
+  maze3d: () => {
+    const model = generate({
+      type: '3d',
+      grid: grid3D({ start: [1, 1, 1], size: [10, 10, 10] }),
+      rules: ['WBB=WAW'],
+      log: { frequency: 5 },
+    })
+    console.log(colorize(model).toString())
+  },
 }
 
 const arg = process.argv[2] || 'growth'
