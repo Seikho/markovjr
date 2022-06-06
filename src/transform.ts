@@ -1,11 +1,11 @@
-import { Dir2D, Dir3D, Grid, Input2D, Input3D, Match, Match2D, Match3D, Point2D, Point3D, Sequence } from './types'
+import { Dir2D, Dir3D, Input2D, Input3D, Match, Match2D, Match3D, Model, Point2D, Point3D, Sequence } from './types'
 
 const VALID_GRID = /[BIPENDAWROYGUSKF\/]+/
 
-export function validateGrid(grid: Grid) {
-  if (grid.type === '2d') {
-    const length = grid.input[0].length
-    for (const input of grid.input) {
+export function validateGrid(model: Model) {
+  if (model.type === '2d') {
+    const length = model.grid.input[0].length
+    for (const input of model.grid.input) {
       if (!VALID_GRID.test(input)) {
         throw new Error(`Grid row contains invalid characters. May only contain "BIPENDAWROYGUSKF" `)
       }
@@ -15,19 +15,33 @@ export function validateGrid(grid: Grid) {
       }
     }
   }
+
+  if (model.type === '3d') {
+    const length = model.grid.input[0][0].length
+    for (const y of model.grid.input)
+      for (const input of y) {
+        if (!VALID_GRID.test(input)) {
+          throw new Error(`Grid row contains invalid characters. May only contain "BIPENDAWROYGUSKF" `)
+        }
+
+        if (input.length !== length) {
+          throw new Error('3D grid is not uniform')
+        }
+      }
+  }
 }
 
-export function applyRule(grid: Grid, { from, to }: Sequence, match: Match) {
-  if (grid.type === '2d') {
+export function applyRule(model: Model, { from, to }: Sequence, match: Match) {
+  if (model.type === '2d') {
     const start = { x: match.x, y: match.y }
     let curr: Point2D | undefined
 
     for (let i = 0; i < from.length; i++) {
       let char = to[i]
-      curr = !curr ? { ...start } : next2D(grid.input, start, curr, match.dir as Dir2D, char)!
+      curr = !curr ? { ...start } : next2D(model.grid.input, start, curr, match.dir as Dir2D, char)!
       if (isShift(char)) char = to[++i]
 
-      grid.input[curr.y] = replace(grid.input[curr.y], curr.x, char)
+      model.grid.input[curr.y] = replace(model.grid.input[curr.y], curr.x, char)
     }
 
     return
@@ -38,32 +52,31 @@ export function applyRule(grid: Grid, { from, to }: Sequence, match: Match) {
 
   for (let i = 0; i < from.length; i++) {
     let char = to[i]
-    curr = !curr ? { ...start } : next3D(grid.input, start, curr, match.dir as Dir3D, char)!
+    curr = !curr ? { ...start } : next3D(model.grid.input, start, curr, match.dir as Dir3D, char)!
     if (isShift(char)) char = to[++i]
 
-    grid.input[curr.z][curr.y] = replace(grid.input[curr.z][curr.y], curr.x, char)
+    model.grid.input[curr.z][curr.y] = replace(model.grid.input[curr.z][curr.y], curr.x, char)
   }
 
   return
 }
 
-export function findMatches(grid: Grid, seq: Sequence): Match[] {
+export function findMatches(model: Model, seq: Sequence): Match[] {
   const matches: Match[] = []
-  if (grid.type === '2d') {
-    for (let y = 0; y < grid.input.length; y++) {
-      for (let x = 0; x < grid.input[0].length; x++) {
-        matches.push(...findMatchesAt2D(grid.input, seq, x, y))
+  if (model.type === '2d') {
+    for (let y = 0; y < model.grid.input.length; y++) {
+      for (let x = 0; x < model.grid.input[0].length; x++) {
+        matches.push(...findMatchesAt2D(model.grid.input, seq, x, y))
       }
     }
 
     return matches
   }
 
-  for (let z = 0; z < grid.input.length; z++) {
-    for (let y = 0; y < grid.input[0].length; y++) {
-      for (let x = 0; x < grid.input[0][0].length; x++) {
-        matches.push(...findMatchesAt3D(grid.input, seq, x, y, z))
-        // console.log(matches.length, { x, y, z })
+  for (let z = 0; z < model.grid.input.length; z++) {
+    for (let y = 0; y < model.grid.input[0].length; y++) {
+      for (let x = 0; x < model.grid.input[0][0].length; x++) {
+        matches.push(...findMatchesAt3D(model.grid.input, seq, x, y, z))
       }
     }
   }

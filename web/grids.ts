@@ -2,6 +2,8 @@ import { generate, Model } from '../src'
 import { dungeon2D, maze2D, maze3D } from '../src/models'
 
 onmessage = (ev) => {
+  console.log('Loading', ev.data)
+
   let model: Model
   switch (ev.data) {
     case 'maze':

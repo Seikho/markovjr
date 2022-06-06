@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react'
 import * as THREE from 'three'
-import { Color, Model } from '../src'
-import { hexColor, iterate2D, iterate3D } from '../src/util'
-import type { OrbitControls as Controls } from 'three/examples/jsm/controls/OrbitControls'
+import { Model } from '../src'
+import { iterate2D, iterate3D } from '../src/util'
 import { cube } from './util'
+import type { OrbitControls as Controls } from 'three/examples/jsm/controls/OrbitControls'
 const { OrbitControls } = require('three/examples/jsm/controls/OrbitControls.js')
 
 export type GridView = ReturnType<typeof useThree>
-
-// const geometry = new THREE.BoxGeometry(20, 20, 20, 1, 1, 1)
-// const colors = Object.entries(hexColor).reduce((map, [color, hex]) => {
-//   map.set(color as Color, new THREE.Color().setHex(hex))
-//   return map
-// }, new Map<Color, THREE.Color>())
 
 const mouse = new THREE.Vector2(1, 1)
 
@@ -25,7 +19,7 @@ export function useThree(name = 'maze') {
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000)
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x000000)
+  scene.background = new THREE.Color(0xffffff)
   const light = new THREE.HemisphereLight(0xffffff, 0x888888)
   light.position.set(0, 500, 2000)
   scene.add(light)
@@ -44,8 +38,6 @@ export function useThree(name = 'maze') {
     camera.lookAt(0, 0, 0)
 
     applyMesh(scene, model)
-
-    // scene.add(mesh)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setPixelRatio(window.devicePixelRatio)
@@ -72,27 +64,18 @@ function applyMesh(scene: THREE.Scene, model: Model) {
 
   if (model.type === '2d') {
     iterate2D(model, (x, y, color) => {
-      scene.add(cube({ x, y, z: 0 }, color))
+      scene.add(...cube(model, { x, y, z: 0 }, color))
       i++
     })
   }
 
   if (model.type === '3d') {
     iterate3D(model, (x, y, z, color) => {
-      if (color !== 'B') scene.add(cube({ x, y, z }, color))
+      if (color !== 'B') scene.add(...cube(model, { x, y, z }, color))
       i++
     })
   }
 }
-
-// function getCellCount(model: Model) {
-//   const count =
-//     model.type === '3d'
-//       ? model.grid.input.length * model.grid.input[0].length * model.grid.input[0][0].length
-//       : model.grid.input.length * model.grid.input[0].length
-
-//   return count
-// }
 
 export function useModel(name: string) {
   const worker = new Worker('dist/grids.js')

@@ -1,14 +1,14 @@
 import { generate } from './generate'
-import { Grid2D, Grid3D, Input2D, Input3D, Model, Rule } from './types'
+import { Color, Grid2D, Grid3D, Input2D, Input3D, Model, Rule } from './types'
 import { terminal, reset, iterate3D, iterate2D } from './util'
 
-type Coord = [number, number] | readonly [number, number]
+type Coord2D = [number, number] | readonly [number, number]
 type Coord3D = [number, number, number] | readonly [number, number, number]
 
 type DrawOpts = {
-  start?: Coord
-  size?: Coord
-  char?: string
+  start?: Coord2D
+  size?: Coord2D
+  char?: Color
   rules: Rule[]
 }
 
@@ -76,7 +76,7 @@ export function colorize(model: Model) {
   return outputs
 }
 
-export function grid2D(opts: Omit<DrawOpts, 'rules'>): Grid2D {
+export function grid2D(opts: { start?: Coord2D; size?: Coord2D; char?: Color }): Grid2D {
   const { start = [0, 0], size = [40, 20], char = 'W' } = opts
   const [x, y] = start
   const [w, h] = size
@@ -88,10 +88,10 @@ export function grid2D(opts: Omit<DrawOpts, 'rules'>): Grid2D {
     else input.push('B'.repeat(w))
   }
 
-  return { input, type: '2d' }
+  return { input }
 }
 
-export function grid3D(opts: { start: Coord3D; size: Coord3D; char?: string }): Grid3D {
+export function grid3D(opts: { start?: Coord3D; size?: Coord3D; char?: Color }): Grid3D {
   const { start = [0, 0, 0], size = [40, 40, 40], char = 'W' } = opts
   const [x, y, z] = start
   const [w, h, d] = size
@@ -107,7 +107,7 @@ export function grid3D(opts: { start: Coord3D; size: Coord3D; char?: string }): 
     input.push(row)
   }
 
-  return { input, type: '3d' }
+  return { input }
 }
 
 export function draw(opts: DrawOpts) {

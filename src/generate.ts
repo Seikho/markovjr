@@ -3,7 +3,7 @@ import { applyRule, findMatches, validateGrid } from './transform'
 import { Model, Rule, Sequence } from './types'
 
 export function generate(model: Model) {
-  validateGrid(model.grid)
+  validateGrid(model)
 
   const freq = model.log?.frequency
   const sequences = model.rules.map(getSequences)
@@ -21,14 +21,14 @@ export function generate(model: Model) {
           break
         }
 
-        const matches = findMatches(model.grid, seq)
+        const matches = findMatches(model, seq)
         if (matches.length === 0) continue
 
         count++
         matched = true
         const random = Math.floor(Math.random() * matches.length)
         const match = matches[random]
-        applyRule(model.grid, seq, match)
+        applyRule(model, seq, match)
 
         if (freq && count % freq === 0) {
           pretty(model)
