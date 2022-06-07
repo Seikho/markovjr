@@ -1,11 +1,11 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { Viewport } from './Grid'
+import { ThreeModel } from './ThreeModel'
 
 const App: React.FC = () => {
   return (
     <div>
-      <Viewport />
+      <ThreeModel />
     </div>
   )
 }

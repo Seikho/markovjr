@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from 'react'
-import { useThree } from './three'
+import { maze3D } from '../src/models'
+import { useSlowThree } from './slow-three'
+// import { useThree } from './three'
 
-export const Viewport: React.FC = () => {
-  const { view, ready } = useThree('maze3d')
+export const ThreeModel: React.FC = () => {
+  // const { view, ready } = useThree('maze3d')
+  const { view, ready } = useSlowThree(maze3D())
   const ref = useRef<HTMLDivElement>(null)
-
-  // useEffect(() => {
-  //   initRaytrace()
-  // }, [])
 
   useEffect(() => {
     if (!view) return

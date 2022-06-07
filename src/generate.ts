@@ -48,7 +48,7 @@ export function generate(model: Model) {
  * @param delay Delay between each step to allow rendering
  * @returns
  */
-export async function slowGenerate(model: Model, delay: number) {
+export async function slowGenerate(model: Model, delay: number, callback: (model: Model) => any) {
   validateGrid(model)
   console.clear()
 
@@ -79,7 +79,7 @@ export async function slowGenerate(model: Model, delay: number) {
 
         if (freq && count % freq === 0) {
           await wait(delay)
-          pretty(model, seq)
+          callback(model)
         }
       }
 

@@ -1,17 +1,17 @@
 import * as THREE from 'three'
 import { Vector3 } from 'three'
 import type { OrbitControls as Controls } from 'three/examples/jsm/controls/OrbitControls'
-import { Color, Model, Point3D } from '../src/types'
+import { Color, Model } from '../src/types'
 import { hexColor, iterate2D, iterate3D } from '../src/util'
 import { mouse } from './mouse'
 const { OrbitControls } = require('three/examples/jsm/controls/OrbitControls.js')
 
 const SIZE = 1
-const OPACITY = 0.9
 let dimensions: Vector3
 
 const geometry = new THREE.BoxGeometry(SIZE, SIZE, SIZE)
-const material = new THREE.LineBasicMaterial({ color: 0x000000 })
+const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff })
+const matrix = new THREE.Matrix4()
 
 export type CubeGrid = Array<Array<THREE.Mesh[]>>
 
@@ -21,6 +21,25 @@ export type ViewControls = {
   renderer: THREE.WebGLRenderer
   controls: Controls
   raycaster: THREE.Raycaster
+}
+
+const threeColor: { [char in Color]: THREE.Color } = {
+  B: new THREE.Color(hexColor.B),
+  I: new THREE.Color(hexColor.I),
+  P: new THREE.Color(hexColor.P),
+  E: new THREE.Color(hexColor.E),
+  N: new THREE.Color(hexColor.N),
+  D: new THREE.Color(hexColor.D),
+  A: new THREE.Color(hexColor.A),
+  W: new THREE.Color(hexColor.W),
+  R: new THREE.Color(hexColor.R),
+  O: new THREE.Color(hexColor.O),
+  Y: new THREE.Color(hexColor.Y),
+  G: new THREE.Color(hexColor.G),
+  U: new THREE.Color(hexColor.U),
+  S: new THREE.Color(hexColor.S),
+  K: new THREE.Color(hexColor.K),
+  F: new THREE.Color(hexColor.F),
 }
 
 export function setup(): ViewControls {
@@ -51,53 +70,68 @@ export function setup(): ViewControls {
   return all
 }
 
-export function cubeGrid(model: Model, scene: THREE.Scene): CubeGrid {
+export function instancedGrid(model: Model, scene: THREE.Scene) {
+  const { count } = getInstanceCount(model)
+  const grid = new THREE.InstancedMesh(geometry, cubeMaterial, count)
+
+  updateInstanceGrid(model, grid)
+
+  scene.add(grid)
+  return grid
+}
+
+export function updateInstanceGrid(model: Model, grid: THREE.InstancedMesh) {
+  const { count, transparent } = getInstanceCount(model)
+  grid.count = count - transparent
+
+  let i = 0
   if (model.type === '2d') {
-    const grid: Array<THREE.Mesh[]> = []
-    let row: THREE.Mesh[] = []
-    let cy: number = 0
     iterate2D(model, (x, y, color) => {
-      if (cy !== y) {
-        grid.push(row)
-        row = []
-        cy = y
-      }
-
-      const next = cube(model, { x, y, z: 0 }, color)
-      scene.add(next)
-      row.push(next)
+      if (color === 'B') return
+      const pos = getPosition(model, x, y, 0)
+      matrix.setPosition(pos.x, pos.y, pos.z)
+      grid.setMatrixAt(i, matrix)
+      grid.setColorAt(i, threeColor[color])
+      i++
     })
-
-    return [grid]
+  } else {
+    iterate3D(model, (x, y, z, color) => {
+      if (color === 'B') return
+      const pos = getPosition(model, x, y, z)
+      matrix.setPosition(pos.x, pos.y, pos.z)
+      grid.setMatrixAt(i, matrix)
+      grid.setColorAt(i, threeColor[color])
+      i++
+    })
   }
 
-  const grid: CubeGrid = []
-  let zrow: Array<THREE.Mesh[]> = []
-  let yrow: THREE.Mesh[] = []
-  let cz = 0
-  let cy = 0
-  iterate3D(model, (x, y, z, color) => {
-    if (cy !== y) {
-      zrow.push(yrow)
-      yrow = []
-      cy = y
-    }
-
-    if (cz !== z) {
-      grid.push(zrow)
-      zrow = []
-      cz = z
-    }
-
-    const next = cube(model, { x, y, z }, color)
-    scene.add(next)
-    yrow.push(next)
-  })
+  grid.instanceColor!.needsUpdate = true
+  grid.instanceMatrix.needsUpdate = true
 
   return grid
 }
 
-export function cube(model: Model, point: Point3D, color: Color) {
+function getInstanceCount(model: Model) {
+  const count =
+    model.type === '3d'
+      ? model.grid.input.length * model.grid.input[0].length * model.grid.input[0][0].length
+      : model.grid.input.length * model.grid.input[0].length
+
+  let transparent = 0
+
+  if (model.type === '2d') {
+    iterate2D(model, (_, __, color) => {
+      if (color === 'B') transparent++
+    })
+  } else {
+    iterate3D(model, (_, __, ___, color) => {
+      if (color === 'B') transparent++
+    })
+  }
+  return { count, transparent }
+}
+
+function getPosition(model: Model, x: number, y: number, z: number) {
   if (!dimensions) {
     if (model.type === '2d') {
       dimensions = new THREE.Vector3(model.grid.input[0].length * SIZE, model.grid.input.length * SIZE, SIZE)
@@ -110,37 +144,11 @@ export function cube(model: Model, point: Point3D, color: Color) {
     }
   }
 
-  const hex = hexColor[color]
-
-  const obj = new THREE.Mesh(
-    geometry,
-    new THREE.MeshLambertMaterial({
-      color: isNaN(hex) ? 0x000000 : hex,
-      opacity: isNaN(hex) || color === 'B' ? 0 : OPACITY,
-    })
-  )
-
-  obj.material.transparent = true
-
-  obj.position.x = point.x * SIZE - dimensions.x / 2
-  obj.position.y = point.y * SIZE - dimensions.y / 2
-  obj.position.z = point.z * SIZE - dimensions.z / 2
-
-  obj.rotation.x = 0
-  obj.rotation.y = 0
-  obj.rotation.z = 0
-
-  obj.scale.x = 1
-  obj.scale.y = 1
-  obj.scale.z = 1
-
-  if (color !== 'B') {
-    const edges = new THREE.EdgesGeometry(obj.geometry)
-    const line = new THREE.LineSegments(edges, material)
-    obj.add(line)
+  return {
+    x: x * SIZE - dimensions.x / 2,
+    y: y * SIZE - dimensions.y / 2,
+    z: z * SIZE - dimensions.z / 2,
   }
-
-  return obj
 }
 
 export function onWindowResize(view: ViewControls) {

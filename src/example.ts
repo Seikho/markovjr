@@ -1,5 +1,5 @@
 import { generate, slowGenerate } from './generate.js'
-import { colorize, draw, grid2D, grid3D } from './helper.js'
+import { colorize, draw, grid2D, grid3D, pretty } from './helper.js'
 
 const grids = {
   small: [40, 20],
@@ -70,7 +70,8 @@ const map: { [key: string]: () => void } = {
         ],
         log: { frequency: 1 },
       },
-      25
+      5,
+      (model) => pretty(model)
     )
   },
 }

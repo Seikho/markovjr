@@ -40,7 +40,7 @@ export const hexColor: { [char in Color]: number } = {
 }
 
 export function getHexColor(color: string) {
-  return hexColor[color as Color] || NaN
+  return hexColor[color as Color]
 }
 
 export function reset(text: string) {
