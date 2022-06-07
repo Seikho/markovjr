@@ -5,7 +5,7 @@ import { ThreeModel } from './ThreeModel'
 const App: React.FC = () => {
   return (
     <div>
-      <ThreeModel delay={undefined} />
+      <ThreeModel delay={1} />
     </div>
   )
 }

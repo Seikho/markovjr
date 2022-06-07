@@ -3,10 +3,11 @@ import { maze3D } from '../src/models'
 import { useSlowThree } from './slow-three'
 import { useThree } from './three'
 
-export const ThreeModel: React.FC<{ delay?: number }> = ({ delay }) => {
+export const ThreeModel: React.FC<{ delay?: number; borders?: boolean }> = ({ delay, borders }) => {
   const model = maze3D()
 
-  const render = delay === undefined ? useThree(model) : useSlowThree({ ...model, log: { frequency: 1 } }, delay)
+  const render =
+    delay === undefined ? useThree(model, borders) : useSlowThree({ ...model, log: { frequency: 1 } }, delay, borders)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

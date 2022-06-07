@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Model } from '../src'
 import { slowGenerate } from '../src/generate'
-import { instancedGrid, onWindowResize, setup, updateInstanceGrid, ViewControls } from './util'
+import { Display, instancedGrid, onWindowResize, setup, updateInstanceGrid, ViewControls } from './util'
 
-export function useSlowThree(model: Model, delay: number) {
+export function useSlowThree(model: Model, delay: number, borders = false) {
   const [ready, setReady] = useState(false)
   const [view, setView] = useState<ViewControls>()
-  const [grid, setGrid] = useState<THREE.InstancedMesh>()
+  const [display, setDisplay] = useState<Display>()
 
   useEffect(() => {
     const view = setup()
@@ -16,19 +16,19 @@ export function useSlowThree(model: Model, delay: number) {
     view.camera.position.set(amount * 2, amount / 2, amount * 2)
     view.camera.lookAt(0, 0, 0)
 
-    const grid = instancedGrid(model, view.scene)
-    setGrid(grid)
+    const display = instancedGrid(model, view.scene, borders)
+    setDisplay(display)
 
     const handler = onWindowResize(view)
     window.addEventListener('resize', handler)
     setReady(true)
 
     slowGenerate({ ...model, log: { frequency: 1 } }, delay, (next) => {
-      updateInstanceGrid(next, grid)
+      setDisplay(updateInstanceGrid(next, display))
     })
 
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  return { view, model, grid, ready }
+  return { view, model, display, ready }
 }

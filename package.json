@@ -9,7 +9,7 @@
     "start": "node build/src/dungeon.js",
     "build": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
     "watch": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --watch",
-    "serve": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --servedir=.",
+    "serve": "concurrently -c bgBlack,bgBlue -n http,es \"yarn http-server -o=index.html\" \"yarn watch\"",
     "example": "node build/src/example"
   },
   "keywords": [],
@@ -20,7 +20,9 @@
     "@types/react": "^18.0.12",
     "@types/react-dom": "^18.0.5",
     "@types/three": "^0.141.0",
+    "concurrently": "^7.2.1",
     "esbuild": "^0.14.42",
+    "http-server": "^14.1.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "three": "^0.141.0",

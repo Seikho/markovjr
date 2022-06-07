@@ -9,8 +9,32 @@ const { OrbitControls } = require('three/examples/jsm/controls/OrbitControls.js'
 const SIZE = 1
 let dimensions: Vector3
 
+export type Display = {
+  scene: THREE.Scene
+  cubes: THREE.InstancedMesh
+  lines: THREE.LineSegments<THREE.InstancedBufferGeometry, THREE.LineBasicMaterial>
+  borders: boolean
+}
+
 const geometry = new THREE.BoxGeometry(SIZE, SIZE, SIZE)
 const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff })
+
+const lineMaterial = new THREE.LineBasicMaterial({
+  color: 0x000000,
+  onBeforeCompile: (shader: any) => {
+    shader.vertexShader = `
+    attribute vec3 offset;
+    ${shader.vertexShader}
+  `.replace(
+      `#include <begin_vertex>`,
+      `
+    #include <begin_vertex>
+    transformed += offset;
+    `
+    )
+  },
+} as any)
+
 const matrix = new THREE.Matrix4()
 
 export type CubeGrid = Array<Array<THREE.Mesh[]>>
@@ -50,9 +74,9 @@ export function setup(): ViewControls {
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000)
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xffffff)
+  scene.background = new THREE.Color(0xe6e6e6)
 
-  const light = new THREE.HemisphereLight(0xffffff, 0x888888)
+  const light = new THREE.HemisphereLight(0xe6e6e6, 0x888888, 0.8)
   light.position.set(0, 500, 2000)
 
   scene.add(light)
@@ -70,19 +94,32 @@ export function setup(): ViewControls {
   return all
 }
 
-export function instancedGrid(model: Model, scene: THREE.Scene) {
+export function instancedGrid(model: Model, scene: THREE.Scene, borders = false): Display {
   const { count } = getInstanceCount(model)
-  const grid = new THREE.InstancedMesh(geometry, cubeMaterial, count)
+  const edges = new THREE.InstancedBufferGeometry().copy(new THREE.EdgesGeometry(geometry))
+  const cubes = new THREE.InstancedMesh(geometry, cubeMaterial, count)
+  const lines = new THREE.LineSegments(edges, lineMaterial)
 
-  updateInstanceGrid(model, grid)
+  updateInstanceGrid(model, { cubes, lines, scene, borders })
 
-  scene.add(grid)
-  return grid
+  scene.add(cubes, lines)
+
+  return { cubes, lines, scene, borders }
 }
 
-export function updateInstanceGrid(model: Model, grid: THREE.InstancedMesh) {
+export function updateInstanceGrid(model: Model, display: Display): Display {
+  const { scene, cubes, borders } = display
   const { count, transparent } = getInstanceCount(model)
-  grid.count = count - transparent
+  let lines = display.lines
+
+  const edges = new THREE.InstancedBufferGeometry().copy(new THREE.EdgesGeometry(geometry))
+
+  if (borders) {
+    scene.remove(display.lines)
+  }
+
+  cubes.count = count - transparent
+  const positions: number[] = []
 
   let i = 0
   if (model.type === '2d') {
@@ -90,8 +127,11 @@ export function updateInstanceGrid(model: Model, grid: THREE.InstancedMesh) {
       if (color === 'B') return
       const pos = getPosition(model, x, y, 0)
       matrix.setPosition(pos.x, pos.y, pos.z)
-      grid.setMatrixAt(i, matrix)
-      grid.setColorAt(i, threeColor[color])
+
+      if (borders) positions.push(pos.x, pos.y, pos.z)
+
+      cubes.setMatrixAt(i, matrix)
+      cubes.setColorAt(i, threeColor[color])
       i++
     })
   } else {
@@ -99,16 +139,25 @@ export function updateInstanceGrid(model: Model, grid: THREE.InstancedMesh) {
       if (color === 'B') return
       const pos = getPosition(model, x, y, z)
       matrix.setPosition(pos.x, pos.y, pos.z)
-      grid.setMatrixAt(i, matrix)
-      grid.setColorAt(i, threeColor[color])
+
+      if (borders) positions.push(pos.x, pos.y, pos.z)
+      cubes.setMatrixAt(i, matrix)
+      cubes.setColorAt(i, threeColor[color])
       i++
     })
   }
 
-  grid.instanceColor!.needsUpdate = true
-  grid.instanceMatrix.needsUpdate = true
+  if (cubes.instanceColor) cubes.instanceColor.needsUpdate = true
+  cubes.instanceMatrix.needsUpdate = true
 
-  return grid
+  if (borders) {
+    edges.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(positions), 3))
+    edges.instanceCount = Infinity
+    lines = new THREE.LineSegments(edges, lineMaterial)
+    scene.add(lines)
+  }
+
+  return { scene, cubes, lines, borders }
 }
 
 function getInstanceCount(model: Model) {

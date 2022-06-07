@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
-import * as THREE from 'three'
 import { Model } from '../src'
-import { instancedGrid, onWindowResize, setup, ViewControls } from './util'
+import { Display, instancedGrid, onWindowResize, setup, ViewControls } from './util'
 
 export type GridView = ReturnType<typeof useThree>
 
-export function useThree(model: Model) {
+export function useThree(model: Model, borders = false) {
   const [load, result] = useModel(model)
   const [view, setView] = useState<ViewControls>()
   const [ready, setReady] = useState(false)
-  const [grid, setGrid] = useState<THREE.InstancedMesh>()
+  const [display, setDisplay] = useState<Display>()
 
   useEffect(load, [])
 
@@ -24,7 +23,7 @@ export function useThree(model: Model) {
     view.camera.position.set(amount * 2, amount / 2, amount * 2)
     view.camera.lookAt(0, 0, 0)
 
-    setGrid(instancedGrid(result, view.scene))
+    setDisplay(instancedGrid(result, view.scene, borders))
 
     const handler = onWindowResize(view)
     window.addEventListener('resize', handler)
@@ -33,7 +32,7 @@ export function useThree(model: Model) {
     return () => window.removeEventListener('resize', handler)
   }, [result])
 
-  return { view, ready, model, grid }
+  return { view, ready, model, display }
 }
 
 export function useModel(model: Model) {
