@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { useThree } from './three'
 
 export const Viewport: React.FC = () => {
-  const view = useThree('maze3d')
+  const { view, ready } = useThree('maze3d')
   const ref = useRef<HTMLDivElement>(null)
 
   // useEffect(() => {
@@ -10,8 +10,9 @@ export const Viewport: React.FC = () => {
   // }, [])
 
   useEffect(() => {
+    if (!view) return
     if (!ref.current) return
-    if (!view.ready) return
+    if (!ready) return
     if (!view.renderer) return
 
     const container = document.createElement('div')

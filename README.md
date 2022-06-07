@@ -56,6 +56,13 @@ Examples sequences:
 
 Rules can contain one or more sequences. Sequences are expressed as arrays.
 
+- `*` is a wildcard
+  - In a `FROM` pattern, it will match any character
+  - In `TO` pattern, it will leave the character unchanged
+- Any character that isn't a `Color` is treated as transparent
+- `FROM` and `TO` patterns must be equal in length and
+- Step characters (`/`) must occur in the same position in `FROM` and `TO` patterns
+
 ```ts
 type Rule = string | string[]
 type Color = 'B' | 'I' | 'P' | 'E' | 'N' | 'D' | 'A' | 'W' | 'R' | 'O' | 'Y' | 'G' | 'U' | 'S' | 'K' | 'F'

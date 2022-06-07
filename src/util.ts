@@ -39,6 +39,10 @@ export const hexColor: { [char in Color]: number } = {
   F: 0xffcaa8,
 }
 
+export function getHexColor(color: string) {
+  return hexColor[color as Color] || NaN
+}
+
 export function reset(text: string) {
   return chalk.reset(text)
 }

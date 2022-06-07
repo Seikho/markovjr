@@ -32,7 +32,7 @@ export function maze2D(): Model {
 export function maze3D(): Model {
   return {
     type: '3d',
-    grid: grid3D({ size: [30, 30, 30], start: [1, 1, 1], char: 'U' }),
+    grid: grid3D({ size: [20, 20, 20], start: [1, 1, 1], char: 'U' }),
     rules: ['UBBBB=UAAAU', 'A=U'],
   }
 }
