@@ -5,7 +5,7 @@ import { ThreeModel } from './ThreeModel'
 const App: React.FC = () => {
   return (
     <div>
-      <ThreeModel />
+      <ThreeModel frequency={1} delay={1} />
     </div>
   )
 }

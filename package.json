@@ -8,8 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node build/src/dungeon.js",
     "build": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
-    "watch": "esbuild build/web/index.js build/web/grids.js --sourcemap --bundle --outdir=dist --watch",
-    "serve": "esbuild build/web/index.js build/web/grids.js --sourcemap --bundle --outdir=dist --servedir=.",
+    "watch": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --watch",
+    "serve": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --servedir=.",
     "example": "node build/src/example"
   },
   "keywords": [],

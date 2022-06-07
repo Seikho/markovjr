@@ -3,7 +3,7 @@ import { Model } from '../src'
 import { slowGenerate } from '../src/generate'
 import { instancedGrid, onWindowResize, setup, updateInstanceGrid, ViewControls } from './util'
 
-export function useSlowThree(model: Model) {
+export function useSlowThree(model: Model, delay: number) {
   const [ready, setReady] = useState(false)
   const [view, setView] = useState<ViewControls>()
   const [grid, setGrid] = useState<THREE.InstancedMesh>()
@@ -23,7 +23,7 @@ export function useSlowThree(model: Model) {
     window.addEventListener('resize', handler)
     setReady(true)
 
-    slowGenerate({ ...model, log: { frequency: 1 } }, 16, (next) => {
+    slowGenerate({ ...model, log: { frequency: 1 } }, delay, (next) => {
       updateInstanceGrid(next, grid)
     })
 
@@ -31,18 +31,4 @@ export function useSlowThree(model: Model) {
   }, [])
 
   return { view, model, grid, ready }
-}
-
-export function useModel(name: string) {
-  const worker = new Worker('dist/grids.js')
-  const [model, setModel] = useState<Model>()
-
-  worker.onmessage = (ev) => {
-    setModel(ev.data)
-    console.log(ev.data)
-  }
-
-  const load = () => worker.postMessage(name)
-
-  return [load, model] as const
 }

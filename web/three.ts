@@ -5,8 +5,8 @@ import { instancedGrid, onWindowResize, setup, ViewControls } from './util'
 
 export type GridView = ReturnType<typeof useThree>
 
-export function useThree(name = 'maze') {
-  const [load, model] = useModel(name)
+export function useThree(model: Model) {
+  const [load, result] = useModel(model)
   const [view, setView] = useState<ViewControls>()
   const [ready, setReady] = useState(false)
   const [grid, setGrid] = useState<THREE.InstancedMesh>()
@@ -14,7 +14,7 @@ export function useThree(name = 'maze') {
   useEffect(load, [])
 
   useEffect(() => {
-    if (!model) return
+    if (!result) return
     console.log('Loading')
 
     const view = setup()
@@ -36,16 +36,15 @@ export function useThree(name = 'maze') {
   return { view, ready, model, grid }
 }
 
-export function useModel(name: string) {
+export function useModel(model: Model) {
   const worker = new Worker('dist/grids.js')
-  const [model, setModel] = useState<Model>()
+  const [result, setModel] = useState<Model>()
 
   worker.onmessage = (ev) => {
     setModel(ev.data)
     console.log(ev.data)
   }
 
-  const load = () => worker.postMessage(name)
-
-  return [load, model] as const
+  const load = () => worker.postMessage(model)
+  return [load, result] as const
 }

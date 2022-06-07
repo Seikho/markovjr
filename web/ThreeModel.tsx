@@ -3,9 +3,8 @@ import { maze3D } from '../src/models'
 import { useSlowThree } from './slow-three'
 // import { useThree } from './three'
 
-export const ThreeModel: React.FC = () => {
-  // const { view, ready } = useThree('maze3d')
-  const { view, ready } = useSlowThree(maze3D())
+export const ThreeModel: React.FC<{ delay: number; frequency: number }> = ({ delay, frequency }) => {
+  const { view, ready } = useSlowThree({ ...maze3D(), log: { frequency } }, delay)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
