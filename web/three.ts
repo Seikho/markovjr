@@ -24,14 +24,14 @@ export function useThree(model: Model) {
     view.camera.position.set(amount * 2, amount / 2, amount * 2)
     view.camera.lookAt(0, 0, 0)
 
-    setGrid(instancedGrid(model, view.scene))
+    setGrid(instancedGrid(result, view.scene))
 
     const handler = onWindowResize(view)
     window.addEventListener('resize', handler)
     setReady(true)
 
     return () => window.removeEventListener('resize', handler)
-  }, [model])
+  }, [result])
 
   return { view, ready, model, grid }
 }
