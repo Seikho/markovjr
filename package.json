@@ -9,7 +9,7 @@
     "start": "node build/src/dungeon.js",
     "build": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
     "watch": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --watch",
-    "serve": "concurrently -c bgBlack,bgBlue -n http,es \"yarn http-server -o=index.html\" \"yarn watch\"",
+    "serve": "concurrently -c bgBlack,bgBlue -n http,es \"yarn http-server -c-1 -o=index.html\" \"yarn watch\"",
     "example": "node build/src/example"
   },
   "keywords": [],

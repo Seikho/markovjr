@@ -76,7 +76,7 @@ export function setup(): ViewControls {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0xe6e6e6)
 
-  const light = new THREE.HemisphereLight(0xe6e6e6, 0x888888, 0.8)
+  const light = new THREE.HemisphereLight(0xffffff, 0x888888, 1)
   light.position.set(0, 500, 2000)
 
   scene.add(light)
@@ -102,7 +102,7 @@ export function instancedGrid(model: Model, scene: THREE.Scene, borders = false)
 
   updateInstanceGrid(model, { cubes, lines, scene, borders })
 
-  scene.add(cubes, lines)
+  scene.add(cubes)
 
   return { cubes, lines, scene, borders }
 }
@@ -111,8 +111,6 @@ export function updateInstanceGrid(model: Model, display: Display): Display {
   const { scene, cubes, borders } = display
   const { count, transparent } = getInstanceCount(model)
   let lines = display.lines
-
-  const edges = new THREE.InstancedBufferGeometry().copy(new THREE.EdgesGeometry(geometry))
 
   if (borders) {
     scene.remove(display.lines)
@@ -124,7 +122,7 @@ export function updateInstanceGrid(model: Model, display: Display): Display {
   let i = 0
   if (model.type === '2d') {
     iterate2D(model, (x, y, color) => {
-      if (color === 'B') return
+      // if (color === 'B') return
       const pos = getPosition(model, x, y, 0)
       matrix.setPosition(pos.x, pos.y, pos.z)
 
@@ -132,25 +130,27 @@ export function updateInstanceGrid(model: Model, display: Display): Display {
 
       cubes.setMatrixAt(i, matrix)
       cubes.setColorAt(i, threeColor[color])
-      i++
+      if (color !== 'B') i++
     })
   } else {
     iterate3D(model, (x, y, z, color) => {
-      if (color === 'B') return
+      // if (color === 'B') return
       const pos = getPosition(model, x, y, z)
       matrix.setPosition(pos.x, pos.y, pos.z)
 
       if (borders) positions.push(pos.x, pos.y, pos.z)
+
       cubes.setMatrixAt(i, matrix)
       cubes.setColorAt(i, threeColor[color])
-      i++
+      if (color !== 'B') i++
     })
   }
 
-  if (cubes.instanceColor) cubes.instanceColor.needsUpdate = true
+  if (cubes.instanceColor) cubes.instanceColor!.needsUpdate = true
   cubes.instanceMatrix.needsUpdate = true
 
   if (borders) {
+    const edges = new THREE.InstancedBufferGeometry().copy(new THREE.EdgesGeometry(geometry))
     edges.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(positions), 3))
     edges.instanceCount = Infinity
     lines = new THREE.LineSegments(edges, lineMaterial)

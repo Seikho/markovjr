@@ -36,3 +36,23 @@ export function maze3D(): Model {
     rules: ['IBBBB=IUUUI', 'I=U'],
   }
 }
+
+export function river(): Model {
+  return {
+    type: '3d',
+    grid: grid3D({ size: [40, 40, 1], char: 'B' }),
+    rules: [
+      'B=W #1',
+      'B=R #1',
+      ['RB=RR', 'WB=WW'],
+      'RW=UU',
+      'W=B #ALL',
+      'R=B #ALL',
+      'UB=UU #1',
+      'BU/UB=U*/** #ALL',
+      'UB=*G',
+      'B=E #13',
+      ['EB=*E', 'GB=*G'],
+    ],
+  }
+}

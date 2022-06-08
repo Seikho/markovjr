@@ -76,6 +76,22 @@ export function colorize(model: Model) {
   return outputs
 }
 
+/**
+ *
+ * @param input Typically a template string. The characters should present a rectangle or a square.
+ * @param depth The number of rows to create along the Z-axis. Defaults to 1.
+ */
+export function stringToGrid(input: string, depth = 1): Grid3D {
+  const y = input.split('\n').map((line) => line.trim())
+
+  const grid: Input3D = []
+  for (let cz = 0; cz < depth; cz++) {
+    grid.push(y.map((line) => line))
+  }
+
+  return { input: grid }
+}
+
 export function grid2D(opts: { start?: Coord2D; size?: Coord2D; char?: Color }): Grid2D {
   const { start = [0, 0], size = [40, 20], char = 'W' } = opts
   const [x, y] = start

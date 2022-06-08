@@ -16,7 +16,7 @@ export function generate(model: Model) {
       for (const seq of sequence) {
         seq.count++
 
-        if (seq.max && seq.count > seq.max) {
+        if (seq.max && seq.count >= seq.max - 1) {
           matched = false
           break
         }
@@ -26,12 +26,25 @@ export function generate(model: Model) {
 
         count++
         matched = true
-        const random = Math.floor(Math.random() * matches.length)
-        const match = matches[random]
-        applyRule(model, seq, match)
 
-        if (freq && count % freq === 0) {
-          pretty(model)
+        if (seq.max === Infinity) {
+          for (const match of matches) {
+            applyRule(model, seq, match)
+          }
+
+          count += matches.length
+          seq.count = Infinity
+          if (freq) {
+            pretty(model)
+          }
+        } else {
+          const random = Math.floor(Math.random() * matches.length)
+          const match = matches[random]
+
+          applyRule(model, seq, match)
+          if (freq && count % freq === 0) {
+            pretty(model)
+          }
         }
       }
 
@@ -73,13 +86,27 @@ export async function slowGenerate(model: Model, delay: number, callback: (model
 
         count++
         matched = true
-        const random = Math.floor(Math.random() * matches.length)
-        const match = matches[random]
-        applyRule(model, seq, match)
 
-        if (freq && count % freq === 0) {
-          await wait(delay)
-          callback(model)
+        if (seq.max === Infinity) {
+          for (const match of matches) {
+            applyRule(model, seq, match)
+          }
+
+          count += matches.length
+          seq.count = Infinity
+          if (freq) {
+            await wait(delay)
+            callback(model)
+          }
+        } else {
+          const random = Math.floor(Math.random() * matches.length)
+          const match = matches[random]
+          applyRule(model, seq, match)
+
+          if (freq && count % freq === 0) {
+            await wait(delay)
+            callback(model)
+          }
         }
       }
 
@@ -112,7 +139,7 @@ function getSequences(rules: Rule): Sequence[] {
       }
     }
 
-    const max = steps ? Number(steps.slice(1)) : undefined
+    const max = steps === '#ALL' ? Infinity : steps ? Number(steps.slice(1)) : undefined
     seqs.push({ from: pair[0], to: pair[1], max, count: 0 })
   }
 
