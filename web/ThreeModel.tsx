@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react'
-import { maze3D, river } from '../src/models'
+import { dungeon2D, maze3D, river } from '../src/models'
 import { useSlowThree } from './slow-three'
 import { useThree } from './three'
 
 export const ThreeModel: React.FC<{ delay?: number; borders?: boolean }> = ({ delay, borders }) => {
-  const model = river()
+  const model = dungeon2D()
 
   const render =
     delay === undefined ? useThree(model, borders) : useSlowThree({ ...model, log: { frequency: 1 } }, delay, borders)
