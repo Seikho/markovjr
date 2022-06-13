@@ -1,6 +1,6 @@
 import { Dir2D, Dir3D, Input2D, Input3D, Match, Match2D, Match3D, Model, Point2D, Point3D, Sequence } from './types'
 
-const VALID_GRID = /[BIPENDAWROYGUSKF\/]+/
+const VALID_GRID = /[BIPENDAWROYGUSKF\ /]+/
 
 export function validateGrid(model: Model) {
   if (model.type === '2d') {
@@ -39,7 +39,7 @@ export function applyRule(model: Model, { from, to }: Sequence, match: Match) {
     for (let i = 0; i < from.length; i++) {
       let char = to[i]
       curr = !curr ? { ...start } : next2D(model.grid.input, start, curr, match.dir as Dir2D, char)!
-      if (isShift(char)) char = to[++i]
+      if (isYshift(char)) char = to[++i]
 
       model.grid.input[curr.y] = replace(model.grid.input[curr.y], curr.x, char)
     }
@@ -53,7 +53,7 @@ export function applyRule(model: Model, { from, to }: Sequence, match: Match) {
   for (let i = 0; i < from.length; i++) {
     let char = to[i]
     curr = !curr ? { ...start } : next3D(model.grid.input, start, curr, match.dir as Dir3D, char)!
-    if (isShift(char)) char = to[++i]
+    if (isYshift(char)) char = to[++i]
 
     model.grid.input[curr.z][curr.y] = replace(model.grid.input[curr.z][curr.y], curr.x, char)
   }
@@ -103,7 +103,7 @@ function findMatchesAt2D(inputs: Input2D, { from }: Sequence, x: number, y: numb
         break
       }
 
-      if (isShift(char)) char = from[++i]
+      if (isYshift(char)) char = from[++i]
 
       if (char !== '*' && char !== inputs[curr.y][curr.x]) {
         matched = false
@@ -134,7 +134,7 @@ function findMatchesAt3D(inputs: Input3D, { from }: Sequence, x: number, y: numb
         break
       }
 
-      if (isShift(char)) char = from[++i]
+      if (isYshift(char)) char = from[++i]
 
       if (char !== '*' && char !== inputs[curr.z][curr.y][curr.x]) {
         matched = false
@@ -148,14 +148,10 @@ function findMatchesAt3D(inputs: Input3D, { from }: Sequence, x: number, y: numb
   return matches
 }
 
-function isShift(text: string): text is '/' {
-  return text === '/'
-}
-
 function next2D(inputs: Input2D, start: Point2D, curr: Point2D, dir: Dir2D, char: string): Point2D | undefined {
   let point: Point2D | undefined
 
-  if (isShift(char)) {
+  if (isYshift(char)) {
     point = shift2D(start, curr, dir)
   }
 
@@ -215,8 +211,10 @@ function shift2D(start: Point2D, curr: Point2D, dir: Dir2D) {
 function next3D(inputs: Input3D, start: Point3D, curr: Point3D, dir: Dir3D, char: string): Point3D | undefined {
   let point: Point3D | undefined
 
-  if (isShift(char)) {
-    point = shift3D(start, curr, dir)
+  if (isYshift(char)) {
+    point = shiftY3d(start, curr, dir)
+  } else if (isZshift(char)) {
+    point = shiftZ3d(start, curr, dir)
   }
 
   switch (dir) {
@@ -251,6 +249,10 @@ function next3D(inputs: Input3D, start: Point3D, curr: Point3D, dir: Dir3D, char
     }
   }
 
+  return isInBounds3D(inputs, point) ? point : undefined
+}
+
+function isInBounds3D(inputs: Input3D, point: Point3D) {
   if (
     point.x < 0 ||
     point.y < 0 ||
@@ -259,43 +261,58 @@ function next3D(inputs: Input3D, start: Point3D, curr: Point3D, dir: Dir3D, char
     point.y >= inputs[0].length ||
     point.z >= inputs.length
   )
-    return
-  return point
+    return false
+  return true
 }
 
-function shift3D(start: Point3D, curr: Point3D, dir: Dir3D) {
-  let point: Point3D
-
+function shiftZ3d(start: Point3D, curr: Point3D, dir: Dir3D): Point3D {
   switch (dir) {
     case 'x-1':
-      point = { x: start.x, y: curr.y - 1, z: curr.z }
-      break
+      return { x: start.x, y: curr.y, z: curr.z - 1 }
+    case 'x+1':
+      return { x: start.x, y: curr.y, z: curr.z + 1 }
+    case 'y-1':
+      return { x: curr.x, y: start.y, z: curr.z - 1 }
+    case 'y+1':
+      return { x: curr.x, y: start.y, z: curr.z + 1 }
+    case 'z-1':
+      return { x: curr.x + 1, y: curr.y, z: start.x }
+    case 'z+1':
+      return { x: curr.x - 1, y: curr.y, z: start.x }
+  }
+}
+
+function shiftY3d(start: Point3D, curr: Point3D, dir: Dir3D): Point3D {
+  switch (dir) {
+    case 'x-1':
+      return { x: start.x, y: curr.y - 1, z: curr.z }
 
     case 'x+1':
-      point = { x: start.x, y: curr.y + 1, z: curr.z }
-      break
+      return { x: start.x, y: curr.y + 1, z: curr.z }
 
     case 'y-1':
-      point = { x: curr.x + 1, y: start.y, z: curr.z }
-      break
+      return { x: curr.x + 1, y: start.y, z: curr.z }
 
     case 'y+1':
-      point = { x: curr.x - 1, y: start.y, z: curr.z }
-      break
+      return { x: curr.x - 1, y: start.y, z: curr.z }
 
     case 'z-1':
-      point = { x: curr.x, y: curr.y - 1, z: start.z }
-      break
+      return { x: curr.x, y: curr.y - 1, z: start.z }
 
     case 'z+1':
-      point = { x: curr.x, y: curr.y + 1, z: start.z }
-      break
+      return { x: curr.x, y: curr.y + 1, z: start.z }
   }
-
-  return point
 }
 
 function replace(text: string, pos: number, char: string) {
   if (char === '*') char = text[pos]
   return text.slice(0, pos) + char + text.slice(pos + 1)
+}
+
+function isZshift(text: string): text is ' ' {
+  return text === ' '
+}
+
+function isYshift(text: string): text is '/' {
+  return text === '/'
 }

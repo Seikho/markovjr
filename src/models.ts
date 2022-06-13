@@ -6,16 +6,16 @@ export function dungeon2D(): Model {
     type: '2d',
     grid: grid2D({ start: [1, 1], size: [100, 60], char: 'P' }),
     rules: [
-      'PBB=**P',
+      'PBB=**P #ALL',
       // Rooms
       'BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #10',
       // MazeBacktracker
       ['RBP=GGR', 'GGR=RWW', 'P=R'],
       ['R=G #1'],
-      ['R=W'],
+      ['R=W #ALL'],
       ['GWW=**G', 'GBW=*WG'],
       ['GBG=*W* #5'],
-      ['G=W'],
+      ['G=W #ALL'],
       ['BBB/BWB=BBB/BBB'],
     ],
   }

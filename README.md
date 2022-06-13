@@ -53,6 +53,7 @@ Examples sequences:
 - `WBB=WAW` Will convert `WBB` to `WAW`
 - `WBB=WAW #5` Will convert `WBB` to `WAW` a maximum for 5 times
 - `BWB/BBB=WWW/WWW` Will scan for `BWB/BBB` where `BBB` is on the row below `BWB`
+- `BWB BBB=WWW WWW` Will scan for `BWB BBB` where `BBB` is on the row one 'deeper' than `BWB`
 
 Rules can contain one or more sequences. Sequences are expressed as arrays.
 

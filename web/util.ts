@@ -74,7 +74,7 @@ export function setup(): ViewControls {
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000)
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xe6e6e6)
+  scene.background = new THREE.Color(0xa6a6a6)
 
   const light = new THREE.HemisphereLight(0xffffff, 0x888888, 1)
   light.position.set(0, 500, 2000)
@@ -122,7 +122,6 @@ export function updateInstanceGrid(model: Model, display: Display): Display {
   let i = 0
   if (model.type === '2d') {
     iterate2D(model, (x, y, color) => {
-      // if (color === 'B') return
       const pos = getPosition(model, x, y, 0)
       matrix.setPosition(pos.x, pos.y, pos.z)
 
@@ -134,7 +133,6 @@ export function updateInstanceGrid(model: Model, display: Display): Display {
     })
   } else {
     iterate3D(model, (x, y, z, color) => {
-      // if (color === 'B') return
       const pos = getPosition(model, x, y, z)
       matrix.setPosition(pos.x, pos.y, pos.z)
 
