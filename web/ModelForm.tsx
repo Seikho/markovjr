@@ -3,15 +3,15 @@ import { Model } from '../src/types'
 import { dungeon2D, maze2D, maze3D, river } from '../src/models'
 import { grid2D } from '../src'
 
-export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: (next: 'slow' | 'fast') => void }> = ({
+type Mode = 'slow' | 'fast'
+
+export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: Mode; setMode: (mode: Mode) => void }> = ({
   generate,
   mode,
+  setMode,
 }) => {
-  React.useEffect(() => mode('slow'), [])
-
   const [width, setWidth] = React.useState(64)
   const [height, setHeight] = React.useState(64)
-  const [slow, setSlow] = React.useState(true)
 
   const model: Model = {
     type: '2d',
@@ -33,10 +33,6 @@ export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: (next
     return handler
   }
 
-  React.useEffect(() => {
-    mode(slow ? 'slow' : 'fast')
-  }, [slow])
-
   return (
     <div className="form">
       <div className="dimensions">
@@ -49,7 +45,11 @@ export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: (next
 
         <div className="dim">
           <div className="label">Slow?</div>
-          <input type="checkbox" defaultChecked={slow} onChange={(ev) => setSlow(ev.target.checked)} />
+          <input
+            type="checkbox"
+            defaultChecked={mode === 'slow'}
+            onChange={(ev) => setMode(ev.target.checked ? 'slow' : 'fast')}
+          />
         </div>
 
         <div className="dim">

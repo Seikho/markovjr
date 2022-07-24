@@ -9,7 +9,7 @@ import { instancedGrid, onWindowResize, setup, Viewport } from './util'
 export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const model = maze2D()
 
-  const [mode, setMode] = React.useState<'slow' | 'fast'>('slow')
+  const [mode, setMode] = React.useState<'slow' | 'fast'>('fast')
   const [ready, setReady] = React.useState(true)
   const [viewport, setViewport] = React.useState<Viewport>()
 
@@ -52,7 +52,7 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   return (
     <>
       <div className="viewport" id="viewport" ref={ref}></div>
-      <ModelForm generate={render.generate} mode={setMode} />
+      <ModelForm generate={render.generate} mode={mode} setMode={setMode} />
     </>
   )
 }
