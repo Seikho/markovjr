@@ -4,7 +4,8 @@ import { maze2D } from '../src/models'
 import { useSlowThree } from './slow-three'
 import { useThree } from './three'
 import { ModelForm } from './ModelForm'
-import { instancedGrid, onWindowResize, setup, Viewport } from './util'
+import { getDisplay, instancedGrid, onWindowResize, setup, Viewport } from './util'
+import { Model } from '../src/types'
 
 export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const model = maze2D()
@@ -20,10 +21,6 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
 
     const view = setup()
 
-    const amount = model.type === '2d' ? model.grid.input.length : model.grid.input[0].length
-    view.camera.position.set(amount * 2, amount / 2, amount * 2)
-    view.camera.lookAt(0, 0, 0)
-
     const display = instancedGrid(model, view.scene, borders)
 
     const handler = onWindowResize(view)
@@ -38,6 +35,21 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const slow = useSlowThree({ ...model, log: { frequency: 1 } }, viewport)
   const render = mode === 'slow' ? slow : fast
 
+  const setPosition = (_model: Model) => {
+    const camera = viewport!.view.camera
+    const { x, y, z } = getDisplay().cubes.position
+    console.log({ x, y, z })
+    camera.position.set(x, y, z)
+    camera.translateZ(100)
+    viewport!.view.camera.updateProjectionMatrix()
+  }
+
+  const generate = (model: Model) => {
+    instancedGrid(model, viewport!.view.scene)
+    setPosition(model)
+    render.generate(model)
+  }
+
   useEffect(() => {
     if (!viewport) return
     if (!ref.current) return
@@ -47,12 +59,13 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
     const container = document.createElement('div')
     ref.current.appendChild(container)
     container.appendChild(viewport.view.renderer.domElement)
+    generate(model)
   }, [viewport, ref])
 
   return (
     <>
       <div className="viewport" id="viewport" ref={ref}></div>
-      <ModelForm generate={render.generate} mode={mode} setMode={setMode} />
+      <ModelForm generate={generate} mode={mode} setMode={setMode} />
     </>
   )
 }

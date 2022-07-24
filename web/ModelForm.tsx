@@ -12,14 +12,41 @@ export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: Mode;
 }) => {
   const [width, setWidth] = React.useState(64)
   const [height, setHeight] = React.useState(64)
+  const [rules, setRules] = React.useState<Array<string>>([''])
 
-  const model: Model = {
-    type: '2d',
-    grid: grid2D({ size: [width, height] }),
-    rules: [],
+  const useExample = (model: Model) => {
+    const rules = model.rules.map((rule) => (Array.isArray(rule) ? rule.join(', ') : rule))
+    setRules(rules)
+    callGenerate(model)
   }
 
-  const canGen = width > 0 && height > 0 && model.rules.length > 0
+  const removeRule = (index: number) => {
+    const next = rules.filter((_, i) => index !== i)
+    setRules(next)
+  }
+
+  const updateRule = (index: number) => (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const next = rules.map((rule, i) => {
+      if (index !== i) return rule
+      return ev.target.value
+    })
+
+    setRules(next)
+  }
+
+  const callGenerate = (existing?: Model) => {
+    if (existing) return generate(existing)
+
+    const model: Model = {
+      type: '2d',
+      grid: grid2D({ size: [width, height] }),
+      rules: rules.map((rule) => (rule.includes(',') ? rule.split(',').map((r) => r.trim()) : rule)),
+    }
+
+    generate(model)
+  }
+
+  const canGen = width > 0 && height > 0 && rules.length > 0 && rules.every((rule) => rule.trim() !== '')
 
   const setter = (func: (val: number) => void) => {
     const handler = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,10 +64,10 @@ export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: Mode;
     <div className="form">
       <div className="dimensions">
         <div>
-          <button onClick={() => generate(river())}>River</button>
-          <button onClick={() => generate(dungeon2D())}>Dungeon 2D</button>
-          <button onClick={() => generate(maze2D())}>Maze 2D</button>
-          <button onClick={() => generate(maze3D())}>Maze 3D</button>
+          <button onClick={() => useExample(river())}>River</button>
+          <button onClick={() => useExample(dungeon2D())}>Dungeon 2D</button>
+          <button onClick={() => useExample(maze2D())}>Maze 2D</button>
+          <button onClick={() => useExample(maze3D())}>Maze 3D</button>
         </div>
 
         <div className="dim">
@@ -63,8 +90,24 @@ export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: Mode;
         </div>
 
         <div>
-          <button disabled={!canGen}>Generate</button>
+          <button disabled={!canGen} onClick={() => callGenerate()}>
+            Generate
+          </button>
         </div>
+      </div>
+
+      <div className="rules">
+        <div>
+          Rules - Separate nested rules using commas. See console for colors{' '}
+          <button onClick={() => setRules(rules.concat(['']))}>Add</button>
+        </div>
+
+        {rules.map((rule, i) => (
+          <div key={i}>
+            <button onClick={() => removeRule(i)}>-</button>
+            <input className="rule" type="text" defaultValue={rule} onChange={updateRule(i)} />
+          </div>
+        ))}
       </div>
     </div>
   )

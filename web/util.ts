@@ -23,6 +23,10 @@ export type Display = {
 
 let DISPLAY: Display
 
+export function getDisplay() {
+  return { ...DISPLAY }
+}
+
 const geometry = new THREE.BoxGeometry(SIZE, SIZE, SIZE)
 const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff })
 
@@ -217,7 +221,7 @@ function getPosition(model: Model, x: number, y: number, z: number) {
 export function onWindowResize(view: ViewControls) {
   return () => {
     const { width, height } = getViewportSize()
-    view.camera.aspect = width / height
+    // view.camera.aspect = width / height
     view.camera.updateProjectionMatrix()
     view.renderer?.setSize(width, height)
   }

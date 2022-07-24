@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Model } from '../src'
-import { instancedGrid, updateInstanceGrid, Viewport } from './util'
+import { updateInstanceGrid, Viewport } from './util'
 
 export type GridView = ReturnType<typeof useThree>
 
@@ -9,11 +9,6 @@ export function useThree(model: Model, viewport?: Viewport) {
 
   const generate = (model: Model) => {
     if (!viewport) return
-
-    instancedGrid(model, viewport.view.scene)
-    const amount = model.type === '2d' ? model.grid.input.length : model.grid.input[0].length
-    viewport.view.camera.position.set(amount * 2, amount / 2, amount * 2)
-    viewport.view.camera.lookAt(0, 0, 0)
     load(model)
   }
 

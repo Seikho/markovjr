@@ -39,6 +39,14 @@ export const hexColor: { [char in Color]: number } = {
   F: 0xffcaa8,
 }
 
+if (typeof window !== 'undefined') {
+  const colors = Object.keys(terminal) as Color[]
+  for (const key of colors) {
+    const color = '#' + terminal[key](hexColor[key].toString(16)).padStart(6, '0')
+    console.log(`${key}: %c           `, `background: ${color};`)
+  }
+}
+
 export function getHexColor(color: string) {
   return hexColor[color as Color]
 }
