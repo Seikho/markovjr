@@ -9,12 +9,19 @@ const { OrbitControls } = require('three/examples/jsm/controls/OrbitControls.js'
 const SIZE = 1
 let dimensions: Vector3
 
+export type Viewport = {
+  view: ViewControls
+  display: Display
+}
+
 export type Display = {
   scene: THREE.Scene
   cubes: THREE.InstancedMesh
   lines: THREE.LineSegments<THREE.InstancedBufferGeometry, THREE.LineBasicMaterial>
   borders: boolean
 }
+
+let DISPLAY: Display
 
 const geometry = new THREE.BoxGeometry(SIZE, SIZE, SIZE)
 const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff })
@@ -69,7 +76,9 @@ const threeColor: { [char in Color]: THREE.Color } = {
 export function setup(): ViewControls {
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(window.devicePixelRatio)
-  renderer.setSize(window.innerWidth * 0.95, window.innerHeight * 0.95)
+
+  const { width, height } = getViewportSize()
+  renderer.setSize(width, height)
 
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000)
 
@@ -95,25 +104,31 @@ export function setup(): ViewControls {
 }
 
 export function instancedGrid(model: Model, scene: THREE.Scene, borders = false): Display {
+  if (DISPLAY) {
+    DISPLAY.scene.remove(DISPLAY.cubes)
+  }
+
   const { count } = getInstanceCount(model)
   const edges = new THREE.InstancedBufferGeometry().copy(new THREE.EdgesGeometry(geometry))
   const cubes = new THREE.InstancedMesh(geometry, cubeMaterial, count)
   const lines = new THREE.LineSegments(edges, lineMaterial)
 
-  updateInstanceGrid(model, { cubes, lines, scene, borders })
+  DISPLAY = { cubes, lines, scene, borders }
+  updateInstanceGrid(model)
 
   scene.add(cubes)
 
-  return { cubes, lines, scene, borders }
+  return DISPLAY
 }
 
-export function updateInstanceGrid(model: Model, display: Display): Display {
-  const { scene, cubes, borders } = display
+export function updateInstanceGrid(model: Model): Display {
+  const { scene, cubes, borders } = DISPLAY
   const { count, transparent } = getInstanceCount(model)
-  let lines = display.lines
+
+  let lines = DISPLAY.lines
 
   if (borders) {
-    scene.remove(display.lines)
+    scene.remove(DISPLAY.lines)
   }
 
   cubes.count = count - transparent
@@ -155,7 +170,8 @@ export function updateInstanceGrid(model: Model, display: Display): Display {
     scene.add(lines)
   }
 
-  return { scene, cubes, lines, borders }
+  DISPLAY = { scene, cubes, lines, borders }
+  return DISPLAY
 }
 
 function getInstanceCount(model: Model) {
@@ -200,9 +216,10 @@ function getPosition(model: Model, x: number, y: number, z: number) {
 
 export function onWindowResize(view: ViewControls) {
   return () => {
-    view.camera.aspect = (window.innerWidth * 0.95) / (window.innerHeight * 0.95)
+    const { width, height } = getViewportSize()
+    view.camera.aspect = width / height
     view.camera.updateProjectionMatrix()
-    view.renderer?.setSize(window.innerWidth * 0.95, window.innerHeight * 0.95)
+    view.renderer?.setSize(width, height)
   }
 }
 
@@ -215,4 +232,13 @@ function animate(view: ViewControls) {
 
 function render(view: ViewControls) {
   view.renderer?.render(view.scene, view.camera)
+}
+
+function getViewportSize() {
+  const ele = document.querySelector('#viewport')!
+
+  const width = ele.clientWidth
+  const height = ele.clientHeight
+
+  return { width, height }
 }

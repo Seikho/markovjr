@@ -1,0 +1,41 @@
+body {
+  margin: 32px 32px 0 32px;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.viewport {
+  display: flex;
+  justify-content: center;
+  height: calc(100vh - 240px);
+}
+
+.form {
+  display: flex;
+  flex-direction: row;
+
+}
+
+.dimensions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dim {
+  display: flex;
+  flex-direction: row;
+}
+
+div.label {
+  width: 40px;
+  
+}
+
+input.dimension {
+  width: 30px;
+}

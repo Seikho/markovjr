@@ -61,7 +61,7 @@ export function generate(model: Model) {
  * @param delay Delay between each step to allow rendering
  * @returns
  */
-export async function slowGenerate(model: Model, delay: number, callback: (model: Model) => any) {
+export function slowGenerate(model: Model, delay: number, callback: (model: Model) => any) {
   validateGrid(model)
   console.clear()
 
@@ -69,52 +69,60 @@ export async function slowGenerate(model: Model, delay: number, callback: (model
   const sequences = model.rules.map(getSequences)
   let count = 0
 
-  for (const sequence of sequences) {
-    while (true) {
-      let matched = false
+  let stopped = false
 
-      for (const seq of sequence) {
-        seq.count++
+  const runner = async () => {
+    for (const sequence of sequences) {
+      while (!stopped) {
+        let matched = false
 
-        if (seq.max && seq.count > seq.max) {
-          matched = false
-          break
-        }
+        for (const seq of sequence) {
+          seq.count++
 
-        const matches = findMatches(model, seq)
-        if (matches.length === 0) continue
+          if (seq.max && seq.count > seq.max) {
+            matched = false
+            break
+          }
 
-        count++
-        matched = true
+          const matches = findMatches(model, seq)
+          if (matches.length === 0) continue
 
-        if (seq.max === Infinity) {
-          for (const match of matches) {
+          count++
+          matched = true
+
+          if (seq.max === Infinity) {
+            for (const match of matches) {
+              applyRule(model, seq, match)
+            }
+
+            count += matches.length
+            seq.count = Infinity
+            if (freq) {
+              await wait(delay)
+              callback(model)
+            }
+          } else {
+            const random = Math.floor(Math.random() * matches.length)
+            const match = matches[random]
             applyRule(model, seq, match)
-          }
 
-          count += matches.length
-          seq.count = Infinity
-          if (freq) {
-            await wait(delay)
-            callback(model)
-          }
-        } else {
-          const random = Math.floor(Math.random() * matches.length)
-          const match = matches[random]
-          applyRule(model, seq, match)
-
-          if (freq && count % freq === 0) {
-            await wait(delay)
-            callback(model)
+            if (freq && count % freq === 0) {
+              await wait(delay)
+              callback(model)
+            }
           }
         }
-      }
 
-      if (!matched) break
+        if (!matched) break
+      }
     }
   }
 
-  return model
+  const stop = () => {
+    stopped = true
+  }
+  runner()
+  return { stop }
 }
 
 function wait(ms: number) {
