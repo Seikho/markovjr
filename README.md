@@ -1,6 +1,6 @@
 # MarkovJR.js
 
-[Demo](https://seikho.github.io/markovjr/index.html)
+[Demo](https://seikho.github.io/markovjr)
 
 > As seen on https://github.com/mxgmn/MarkovJunior
 
