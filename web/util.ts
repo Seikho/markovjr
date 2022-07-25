@@ -85,6 +85,7 @@ export function setup(): ViewControls {
   renderer.setSize(width, height)
 
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000)
+  camera.aspect = width / height
 
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0xa6a6a6)
@@ -221,7 +222,7 @@ function getPosition(model: Model, x: number, y: number, z: number) {
 export function onWindowResize(view: ViewControls) {
   return () => {
     const { width, height } = getViewportSize()
-    // view.camera.aspect = width / height
+    view.camera.aspect = width / height
     view.camera.updateProjectionMatrix()
     view.renderer?.setSize(width, height)
   }
