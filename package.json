@@ -7,9 +7,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node build/src/dungeon.js",
-    "build": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
+    "build": "tsc",
+    "bundle": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
     "watch": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --watch",
-    "serve": "concurrently -c bgBlack,bgBlue,bgRed,bgRed -n http,es \"yarn http-server -c-1 -o=index.html\" \"yarn watch\" \"yarn copy:dist\" \"yarn copy:docs\"",
+    "serve": "concurrently -c bgBlack,bgBlue,bgBlue,bgRed,bgRed -n http,tsc,es,dist,docs \"yarn http-server -c-1 -o=index.html\" \"yarn tsc -w\" \"yarn watch\" \"yarn copy:dist\" \"yarn copy:docs\"",
     "copy:dist": "copy-and-watch --watch web/**/*.css build/web/",
     "copy:docs": "copy-and-watch --watch dist/*.{js,js.map,css,css.map} docs/",
     "example": "node build/src/example"

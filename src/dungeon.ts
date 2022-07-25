@@ -44,6 +44,3 @@ function DungeonV2(): Rule[] {
     ['BBB/BWB=BBB/BBB'],
   ]
 }
-
-DungeonV1
-DungeonV2

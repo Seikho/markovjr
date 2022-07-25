@@ -22887,7 +22887,6 @@
       exports.generate = generate;
       function slowGenerate(model, delay, callback) {
         (0, transform_1.validateGrid)(model);
-        console.clear();
         const freq = model.log?.frequency;
         const sequences = model.rules.map(getSequences);
         let count = 0;
