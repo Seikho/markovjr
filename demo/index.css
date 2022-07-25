@@ -1,0 +1,45 @@
+/* build/web/styles.css */
+body {
+  margin: 32px 32px 0 32px;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.viewport {
+  display: flex;
+  justify-content: center;
+  height: calc(100vh - 340px);
+  max-height: 600px;
+}
+.form {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+.dimensions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dim {
+  display: flex;
+  flex-direction: row;
+}
+div.label {
+  width: 40px;
+}
+input.dimension {
+  width: 30px;
+}
+.rules {
+  min-width: calc(100vw - 64px - 8px - 282px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+input.rule {
+  width: calc(100% - 40px);
+}
+/*# sourceMappingURL=index.css.map */
