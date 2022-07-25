@@ -71913,7 +71913,7 @@
       var util_1 = require_util3();
       var App = ({ borders }) => {
         const model = (0, models_1.maze2D)();
-        const [mode, setMode] = react_1.default.useState("fast");
+        const [mode, setMode] = react_1.default.useState("slow");
         const [ready, setReady] = react_1.default.useState(true);
         const [viewport, setViewport] = react_1.default.useState();
         const ref = (0, react_1.useRef)(null);

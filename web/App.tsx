@@ -10,7 +10,7 @@ import { Model } from '../src/types'
 export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const model = maze2D()
 
-  const [mode, setMode] = React.useState<'slow' | 'fast'>('fast')
+  const [mode, setMode] = React.useState<'slow' | 'fast'>('slow')
   const [ready, setReady] = React.useState(true)
   const [viewport, setViewport] = React.useState<Viewport>()
 
