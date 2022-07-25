@@ -5,11 +5,13 @@ import { grid2D } from '../src'
 
 type Mode = 'slow' | 'fast'
 
-export const ModelForm: React.FC<{ generate: (model: Model) => void; mode: Mode; setMode: (mode: Mode) => void }> = ({
-  generate,
-  mode,
-  setMode,
-}) => {
+type Props = {
+  generate: (model: Model) => void
+  mode: Mode
+  setMode: (mode: Mode) => void
+}
+
+export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
   const [width, setWidth] = React.useState(64)
   const [height, setHeight] = React.useState(64)
   const [rules, setRules] = React.useState<Array<string>>([''])

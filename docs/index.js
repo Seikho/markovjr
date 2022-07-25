@@ -71535,6 +71535,7 @@
         const { width, height } = getViewportSize();
         renderer.setSize(width, height);
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5e3);
+        camera.aspect = width / height;
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(10921638);
         const light = new THREE.HemisphereLight(16777215, 8947848, 1);
@@ -71644,6 +71645,7 @@
       function onWindowResize(view) {
         return () => {
           const { width, height } = getViewportSize();
+          view.camera.aspect = width / height;
           view.camera.updateProjectionMatrix();
           view.renderer?.setSize(width, height);
         };
@@ -71911,7 +71913,7 @@
       var util_1 = require_util3();
       var App = ({ borders }) => {
         const model = (0, models_1.maze2D)();
-        const [mode, setMode] = react_1.default.useState("fast");
+        const [mode, setMode] = react_1.default.useState("slow");
         const [ready, setReady] = react_1.default.useState(true);
         const [viewport, setViewport] = react_1.default.useState();
         const ref = (0, react_1.useRef)(null);
@@ -71932,7 +71934,6 @@
         const setPosition = (_model) => {
           const camera = viewport.view.camera;
           const { x, y, z } = (0, util_1.getDisplay)().cubes.position;
-          console.log({ x, y, z });
           camera.position.set(x, y, z);
           camera.translateZ(100);
           viewport.view.camera.updateProjectionMatrix();
