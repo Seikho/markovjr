@@ -38,7 +38,6 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const setPosition = (_model: Model) => {
     const camera = viewport!.view.camera
     const { x, y, z } = getDisplay().cubes.position
-    console.log({ x, y, z })
     camera.position.set(x, y, z)
     camera.translateZ(100)
     viewport!.view.camera.updateProjectionMatrix()
