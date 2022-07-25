@@ -63,7 +63,6 @@ export function generate(model: Model) {
  */
 export function slowGenerate(model: Model, delay: number, callback: (model: Model) => any) {
   validateGrid(model)
-  console.clear()
 
   const freq = model.log?.frequency
   const sequences = model.rules.map(getSequences)
