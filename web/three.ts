@@ -22,7 +22,8 @@ export function useThree(model: Model, viewport?: Viewport) {
 }
 
 export function useModel(initModel: Model) {
-  const worker = new Worker('dist/grids.js')
+  const url = location.host.toLowerCase().includes('github.io') ? 'markovjr/grids.js' : 'dist/grids.js'
+  const worker = new Worker(url)
   const [result, setModel] = useState<Model>()
 
   worker.onmessage = (ev) => {
