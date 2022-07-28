@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Model } from '../src'
-import { updateInstanceGrid, Viewport } from './util'
+import { updateInstanceGrid } from './util'
 
 export type GridView = ReturnType<typeof useThree>
 
-export function useThree(model: Model, viewport?: Viewport) {
+export function useThree(model: Model, onDone?: Function) {
   const [load, result] = useModel(model)
 
   const generate = (model: Model) => {
-    if (!viewport) return
     load(model)
   }
 
   useEffect(() => {
-    if (!result || !viewport) return
-
+    if (!result) return
     updateInstanceGrid(result)
+    onDone?.()
   }, [result])
 
   return { model, generate }

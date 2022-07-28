@@ -1,6 +1,27 @@
 import { grid2D, grid3D } from './helper'
 import { Model } from './types'
 
+export function dungeon2DV2(): Model {
+  return {
+    type: '2d',
+    grid: grid2D({ start: [1, 1], size: [100, 60], char: 'B' }),
+    rules: [
+      'B=P #1',
+      'PBB=**P #ALL',
+      // Rooms
+      // 'BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #10',
+      // // MazeBacktracker
+      // ['RBP=GGR', 'GGR=RWW', 'P=R'],
+      // ['R=G #1'],
+      // ['R=W #ALL'],
+      // ['GWW=**G', 'GBW=*WG'],
+      // ['GBG=*W* #5'],
+      // ['G=W #ALL'],
+      // ['BBB/BWB=BBB/BBB'],
+    ],
+  }
+}
+
 export function dungeon2D(): Model {
   return {
     type: '2d',
@@ -24,7 +45,7 @@ export function dungeon2D(): Model {
 export function maze2D(): Model {
   return {
     type: '2d',
-    grid: grid2D({ size: [20, 20], start: [1, 1] }),
+    grid: grid2D({ size: [20, 20], start: [1, 1], char: 'W' }),
     rules: ['WBB=WAW'],
   }
 }

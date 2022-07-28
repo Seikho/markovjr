@@ -30,10 +30,11 @@ body {
 .dim {
   display: flex;
   flex-direction: row;
+  gap: 4px;
 }
 
 div.label {
-  width: 40px;
+  min-width: 40px;
 }
 
 input.dimension {

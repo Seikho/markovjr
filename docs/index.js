@@ -22841,42 +22841,15 @@
       exports.slowGenerate = exports.generate = void 0;
       var helper_1 = require_helper();
       var transform_1 = require_transform();
-      function generate(model) {
-        (0, transform_1.validateGrid)(model);
-        const freq = model.log?.frequency;
+      function generate(opts) {
+        (0, transform_1.validateGrid)(opts);
+        const model = { ...opts, count: 0, freq: opts.log?.frequency };
         const sequences = model.rules.map(getSequences);
-        let count = 0;
         for (const sequence of sequences) {
           while (true) {
             let matched = false;
             for (const seq of sequence) {
-              seq.count++;
-              if (seq.max && seq.count >= seq.max - 1) {
-                matched = false;
-                break;
-              }
-              const matches = (0, transform_1.findMatches)(model, seq);
-              if (matches.length === 0)
-                continue;
-              count++;
-              matched = true;
-              if (seq.max === Infinity) {
-                for (const match of matches) {
-                  (0, transform_1.applyRule)(model, seq, match);
-                }
-                count += matches.length;
-                seq.count = Infinity;
-                if (freq) {
-                  (0, helper_1.pretty)(model);
-                }
-              } else {
-                const random = Math.floor(Math.random() * matches.length);
-                const match = matches[random];
-                (0, transform_1.applyRule)(model, seq, match);
-                if (freq && count % freq === 0) {
-                  (0, helper_1.pretty)(model);
-                }
-              }
+              matched = applySequence(model, seq);
             }
             if (!matched)
               break;
@@ -22885,42 +22858,22 @@
         return model;
       }
       exports.generate = generate;
-      function slowGenerate(model, delay, callback) {
-        (0, transform_1.validateGrid)(model);
-        const freq = model.log?.frequency;
+      function slowGenerate(opts, delay, callback, onDone) {
+        (0, transform_1.validateGrid)(opts);
+        const model = { ...opts, count: 0, freq: opts.log?.frequency };
         const sequences = model.rules.map(getSequences);
-        let count = 0;
         let stopped = false;
         const runner = async () => {
           for (const sequence of sequences) {
             while (!stopped) {
               let matched = false;
               for (const seq of sequence) {
-                seq.count++;
-                if (seq.max && seq.count > seq.max) {
-                  matched = false;
-                  break;
-                }
-                const matches = (0, transform_1.findMatches)(model, seq);
-                if (matches.length === 0)
-                  continue;
-                count++;
-                matched = true;
-                if (seq.max === Infinity) {
-                  for (const match of matches) {
-                    (0, transform_1.applyRule)(model, seq, match);
-                  }
-                  count += matches.length;
-                  seq.count = Infinity;
-                  if (freq) {
-                    await wait(delay);
-                    callback(model);
-                  }
+                matched = applySequence(model, seq);
+                if (seq.max === Infinity && model.freq) {
+                  await wait(delay);
+                  callback(model);
                 } else {
-                  const random = Math.floor(Math.random() * matches.length);
-                  const match = matches[random];
-                  (0, transform_1.applyRule)(model, seq, match);
-                  if (freq && count % freq === 0) {
+                  if (model.freq && model.count % model.freq === 0) {
                     await wait(delay);
                     callback(model);
                   }
@@ -22930,6 +22883,7 @@
                 break;
             }
           }
+          onDone?.();
         };
         const stop = () => {
           stopped = true;
@@ -22938,6 +22892,34 @@
         return { stop };
       }
       exports.slowGenerate = slowGenerate;
+      function applySequence(model, seq) {
+        if (seq.max && seq.max !== Infinity && seq.count >= seq.max) {
+          return false;
+        }
+        seq.count++;
+        let matches = (0, transform_1.findMatches)(model, seq);
+        if (matches.length === 0)
+          return false;
+        model.count++;
+        if (seq.max === Infinity) {
+          for (const match of matches) {
+            (0, transform_1.applyRule)(model, seq, match);
+          }
+          model.count += matches.length;
+          seq.count = Infinity;
+          if (model.freq) {
+            (0, helper_1.pretty)(model);
+          }
+        } else {
+          const random = Math.floor(Math.random() * matches.length);
+          const match = matches[random];
+          (0, transform_1.applyRule)(model, seq, match);
+          if (model.freq && model.count % model.freq === 0) {
+            (0, helper_1.pretty)(model);
+          }
+        }
+        return true;
+      }
       function wait(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
       }
@@ -24554,7 +24536,7 @@
       }
       exports.stringToGrid = stringToGrid;
       function grid2D(opts) {
-        const { start = [0, 0], size = [40, 20], char = "W" } = opts;
+        const { start = [0, 0], size = [40, 20], char = "B" } = opts;
         const [x, y] = start;
         const [w, h] = size;
         const input = [];
@@ -24568,7 +24550,7 @@
       }
       exports.grid2D = grid2D;
       function grid3D(opts) {
-        const { start = [0, 0, 0], size = [40, 40, 40], char = "W" } = opts;
+        const { start = [0, 0, 0], size = [40, 40, 40], char = "B" } = opts;
         const [x, y, z] = start;
         const [w, h, d] = size;
         const input = [];
@@ -24593,6 +24575,8 @@
       }
       exports.draw = draw;
       function pretty(model, seq) {
+        if (typeof window !== "undefined")
+          return;
         const colors = colorize(model);
         for (let i = 0; i < colors.length; i++) {
           process.stdout.cursorTo(0, i);
@@ -24613,8 +24597,19 @@
     "build/src/models.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.river = exports.maze3D = exports.maze2D = exports.dungeon2D = void 0;
+      exports.river = exports.maze3D = exports.maze2D = exports.dungeon2D = exports.dungeon2DV2 = void 0;
       var helper_1 = require_helper();
+      function dungeon2DV2() {
+        return {
+          type: "2d",
+          grid: (0, helper_1.grid2D)({ start: [1, 1], size: [100, 60], char: "B" }),
+          rules: [
+            "B=P #1",
+            "PBB=**P #ALL"
+          ]
+        };
+      }
+      exports.dungeon2DV2 = dungeon2DV2;
       function dungeon2D() {
         return {
           type: "2d",
@@ -24636,7 +24631,7 @@
       function maze2D() {
         return {
           type: "2d",
-          grid: (0, helper_1.grid2D)({ size: [20, 20], start: [1, 1] }),
+          grid: (0, helper_1.grid2D)({ size: [20, 20], start: [1, 1], char: "W" }),
           rules: ["WBB=WAW"]
         };
       }
@@ -71483,18 +71478,23 @@
         return result;
       };
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.onWindowResize = exports.updateInstanceGrid = exports.instancedGrid = exports.setup = exports.getDisplay = void 0;
+      exports.getModelSize = exports.onWindowResize = exports.updateInstanceGrid = exports.instancedGrid = exports.setup = exports.getView = exports.getDisplay = void 0;
       var THREE = __importStar(require_three());
       var util_1 = require_util2();
       var mouse_1 = require_mouse();
       var { OrbitControls: OrbitControls2 } = (init_OrbitControls(), __toCommonJS(OrbitControls_exports));
       var SIZE = 1;
       var dimensions;
+      var VIEW;
       var DISPLAY;
       function getDisplay() {
         return { ...DISPLAY };
       }
       exports.getDisplay = getDisplay;
+      function getView() {
+        return { ...VIEW };
+      }
+      exports.getView = getView;
       var geometry = new THREE.BoxGeometry(SIZE, SIZE, SIZE);
       var cubeMaterial = new THREE.MeshPhongMaterial({ color: 16777215 });
       var lineMaterial = new THREE.LineBasicMaterial({
@@ -71547,10 +71547,11 @@
         controls.enablePan = true;
         const all = { scene, camera, raycaster, renderer, controls };
         animate(all);
+        VIEW = all;
         return all;
       }
       exports.setup = setup;
-      function instancedGrid(model, scene, borders = false) {
+      function instancedGrid(model, borders = false) {
         if (DISPLAY) {
           DISPLAY.scene.remove(DISPLAY.cubes);
         }
@@ -71558,9 +71559,10 @@
         const edges = new THREE.InstancedBufferGeometry().copy(new THREE.EdgesGeometry(geometry));
         const cubes = new THREE.InstancedMesh(geometry, cubeMaterial, count);
         const lines = new THREE.LineSegments(edges, lineMaterial);
-        DISPLAY = { cubes, lines, scene, borders };
+        cubes.position.set(0, 0, 0);
+        DISPLAY = { cubes, lines, scene: VIEW.scene, borders };
         updateInstanceGrid(model);
-        scene.add(cubes);
+        DISPLAY.scene.add(cubes);
         return DISPLAY;
       }
       exports.instancedGrid = instancedGrid;
@@ -71665,6 +71667,13 @@
         const height = ele.clientHeight;
         return { width, height };
       }
+      function getModelSize(model) {
+        const w = model.grid.input[0].length;
+        const h = model.grid.input.length;
+        const d = model.type === "3d" ? model.grid.input[0][0].length : 1;
+        return { w, h, d };
+      }
+      exports.getModelSize = getModelSize;
     }
   });
 
@@ -71677,19 +71686,17 @@
       var react_1 = require_react();
       var generate_1 = require_generate();
       var util_1 = require_util3();
-      function useSlowThree(model, viewport) {
+      function useSlowThree(model, onDone) {
         const [stopper, setStop] = (0, react_1.useState)({ stop: () => {
         } });
         const generate = (model2) => {
-          if (!viewport)
-            return;
           stopper.stop();
           const nextStop = (0, generate_1.slowGenerate)({ ...model2, log: { frequency: 1 } }, 1, (next) => {
             (0, util_1.updateInstanceGrid)(next);
-          });
+          }, onDone);
           setStop(nextStop);
         };
-        return { model, generate };
+        return { model, generate, stopper };
       }
       exports.useSlowThree = useSlowThree;
     }
@@ -71703,17 +71710,16 @@
       exports.useModel = exports.useThree = void 0;
       var react_1 = require_react();
       var util_1 = require_util3();
-      function useThree(model, viewport) {
+      function useThree(model, onDone) {
         const [load, result] = useModel(model);
         const generate = (model2) => {
-          if (!viewport)
-            return;
           load(model2);
         };
         (0, react_1.useEffect)(() => {
-          if (!result || !viewport)
+          if (!result)
             return;
           (0, util_1.updateInstanceGrid)(result);
+          onDone?.();
         }, [result]);
         return { model, generate };
       }
@@ -71817,6 +71823,9 @@
       var models_1 = require_models();
       var src_1 = require_src();
       var ModelForm = ({ generate, mode, setMode }) => {
+        const [x, setX] = React.useState(1);
+        const [y, setY] = React.useState(1);
+        const [char, setChar] = React.useState("W");
         const [width, setWidth] = React.useState(64);
         const [height, setHeight] = React.useState(64);
         const [rules, setRules] = React.useState([""]);
@@ -71847,7 +71856,7 @@
           };
           generate(model);
         };
-        const canGen = width > 0 && height > 0 && rules.length > 0 && rules.every((rule) => rule.trim() !== "");
+        const canGen = width > 0 && height > 0 && rules.length > 0 && rules.every((rule) => rule.trim() !== "") && x < width && y < height;
         const setter = (func) => {
           const handler = (ev) => {
             const value = Number(ev.target.value);
@@ -71859,7 +71868,7 @@
           };
           return handler;
         };
-        return React.createElement("div", { className: "form" }, React.createElement("div", { className: "dimensions" }, React.createElement("div", null, React.createElement("button", { onClick: () => useExample((0, models_1.river)()) }, "River"), React.createElement("button", { onClick: () => useExample((0, models_1.dungeon2D)()) }, "Dungeon 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.maze2D)()) }, "Maze 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.maze3D)()) }, "Maze 3D")), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "Slow?"), React.createElement("input", { type: "checkbox", defaultChecked: mode === "slow", onChange: (ev) => setMode(ev.target.checked ? "slow" : "fast") })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "W"), React.createElement("input", { className: "dimension", type: "text", defaultValue: width, onChange: setter(setWidth) })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "H"), React.createElement("input", { className: "dimension", type: "text", defaultValue: height, onChange: setter(setHeight) })), React.createElement("div", null, React.createElement("button", { disabled: !canGen, onClick: () => callGenerate() }, "Generate"))), React.createElement("div", { className: "rules" }, React.createElement("div", null, "Rules - Separate nested rules using commas. See console for colors", " ", React.createElement("button", { onClick: () => setRules(rules.concat([""])) }, "Add")), rules.map((rule, i) => React.createElement("div", { key: i }, React.createElement("button", { onClick: () => removeRule(i) }, "-"), React.createElement("input", { className: "rule", type: "text", defaultValue: rule, onChange: updateRule(i) })))));
+        return React.createElement("div", { className: "form" }, React.createElement("div", { className: "dimensions" }, React.createElement("div", null, React.createElement("button", { onClick: () => useExample((0, models_1.river)()) }, "River"), React.createElement("button", { onClick: () => useExample((0, models_1.dungeon2D)()) }, "Dungeon 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.dungeon2DV2)()) }, "Dungeon 2D V2"), React.createElement("button", { onClick: () => useExample((0, models_1.maze2D)()) }, "Maze 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.maze3D)()) }, "Maze 3D")), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "Slow?"), React.createElement("input", { type: "checkbox", defaultChecked: mode === "slow", onChange: (ev) => setMode(ev.target.checked ? "slow" : "fast") })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "W"), React.createElement("input", { className: "dimension", type: "text", defaultValue: width, onChange: setter(setWidth) })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "H"), React.createElement("input", { className: "dimension", type: "text", defaultValue: height, onChange: setter(setHeight) })), React.createElement("div", { className: "dim" }, React.createElement("div", null, React.createElement("div", null, "Start Color, X, Y:"), React.createElement("div", null, "Place a COLOR at X,Y instead of a blank"), React.createElement("div", null, "Set COLOR to empty to leave it blank"))), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "Color"), React.createElement("input", { className: "dimension", type: "text", defaultValue: char, onChange: (e) => setChar(e.target.value) })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "X,Y"), React.createElement("input", { className: "dimension", type: "text", defaultValue: x, onChange: setter(setX) }), React.createElement("input", { className: "dimension", type: "text", defaultValue: y, onChange: setter(setY) })), React.createElement("div", null, React.createElement("button", { disabled: !canGen, onClick: () => callGenerate() }, "Generate"))), React.createElement("div", { className: "rules" }, React.createElement("div", null, "Rules - Separate nested rules using commas. See console for colors", " ", React.createElement("button", { onClick: () => setRules(rules.concat([""])) }, "Add")), rules.map((rule, i) => React.createElement("div", { key: i }, React.createElement("button", { onClick: () => removeRule(i) }, "-"), React.createElement("input", { className: "rule", type: "text", defaultValue: rule, onChange: updateRule(i) })))));
       };
       exports.ModelForm = ModelForm;
     }
@@ -71905,57 +71914,53 @@
       exports.App = void 0;
       require_();
       var react_1 = __importStar(require_react());
-      var models_1 = require_models();
+      var models = __importStar(require_models());
       var slow_three_1 = require_slow_three();
       var three_1 = require_three2();
       var ModelForm_1 = require_ModelForm();
       var util_1 = require_util3();
       var App = ({ borders }) => {
-        const model = (0, models_1.maze2D)();
+        const baseModel = models.maze2D();
         const [mode, setMode] = react_1.default.useState("slow");
         const [ready, setReady] = react_1.default.useState(true);
-        const [viewport, setViewport] = react_1.default.useState();
+        const [view, setView] = react_1.default.useState();
         const ref = (0, react_1.useRef)(null);
         react_1.default.useEffect(() => {
           if (!ref.current)
             return;
-          const view = (0, util_1.setup)();
-          const display = (0, util_1.instancedGrid)(model, view.scene, borders);
-          const handler = (0, util_1.onWindowResize)(view);
+          const view2 = (0, util_1.setup)();
+          (0, util_1.instancedGrid)(baseModel, borders);
+          const handler = (0, util_1.onWindowResize)(view2);
           window.addEventListener("resize", handler);
           setReady(true);
-          const viewport2 = { view, display };
-          setViewport(viewport2);
+          view2.camera.translateZ(75);
+          setView(view2);
         }, [ref]);
-        const fast = (0, three_1.useThree)(model, viewport);
-        const slow = (0, slow_three_1.useSlowThree)({ ...model, log: { frequency: 1 } }, viewport);
+        const fast = (0, three_1.useThree)(baseModel);
+        const slow = (0, slow_three_1.useSlowThree)({ ...baseModel, log: { frequency: 1 } });
         const render = mode === "slow" ? slow : fast;
-        const setPosition = (_model) => {
-          const camera = viewport.view.camera;
-          const { x, y, z } = (0, util_1.getDisplay)().cubes.position;
-          camera.position.set(x, y, z);
-          camera.translateZ(100);
-          viewport.view.camera.updateProjectionMatrix();
+        const setPosition = (model) => {
+          const camera = (0, util_1.getView)().camera;
+          camera.lookAt(0, 0, 0);
+          camera.updateProjectionMatrix();
         };
-        const generate = (model2) => {
-          (0, util_1.instancedGrid)(model2, viewport.view.scene);
-          setPosition(model2);
-          render.generate(model2);
+        const generate = (model) => {
+          (0, util_1.instancedGrid)(model);
+          setPosition(model);
+          render.generate(model);
         };
         (0, react_1.useEffect)(() => {
-          if (!viewport)
+          if (!view || !view.renderer)
             return;
           if (!ref.current)
             return;
           if (!ready)
             return;
-          if (!viewport.view.renderer)
-            return;
           const container = document.createElement("div");
           ref.current.appendChild(container);
-          container.appendChild(viewport.view.renderer.domElement);
-          generate(model);
-        }, [viewport, ref]);
+          container.appendChild(view.renderer.domElement);
+          generate(baseModel);
+        }, [view, ref]);
         return react_1.default.createElement(react_1.default.Fragment, null, react_1.default.createElement("div", { className: "viewport", id: "viewport", ref }), react_1.default.createElement(ModelForm_1.ModelForm, { generate, mode, setMode }));
       };
       exports.App = App;

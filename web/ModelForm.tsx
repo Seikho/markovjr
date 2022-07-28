@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Model } from '../src/types'
-import { dungeon2D, maze2D, maze3D, river } from '../src/models'
+import { dungeon2D, maze2D, maze3D, river, dungeon2DV2 } from '../src/models'
 import { grid2D } from '../src'
 
 type Mode = 'slow' | 'fast'
@@ -12,6 +12,9 @@ type Props = {
 }
 
 export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
+  const [x, setX] = React.useState(1)
+  const [y, setY] = React.useState(1)
+  const [char, setChar] = React.useState('W')
   const [width, setWidth] = React.useState(64)
   const [height, setHeight] = React.useState(64)
   const [rules, setRules] = React.useState<Array<string>>([''])
@@ -48,7 +51,8 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
     generate(model)
   }
 
-  const canGen = width > 0 && height > 0 && rules.length > 0 && rules.every((rule) => rule.trim() !== '')
+  const canGen =
+    width > 0 && height > 0 && rules.length > 0 && rules.every((rule) => rule.trim() !== '') && x < width && y < height
 
   const setter = (func: (val: number) => void) => {
     const handler = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +72,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
         <div>
           <button onClick={() => useExample(river())}>River</button>
           <button onClick={() => useExample(dungeon2D())}>Dungeon 2D</button>
+          <button onClick={() => useExample(dungeon2DV2())}>Dungeon 2D V2</button>
           <button onClick={() => useExample(maze2D())}>Maze 2D</button>
           <button onClick={() => useExample(maze3D())}>Maze 3D</button>
         </div>
@@ -89,6 +94,25 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
         <div className="dim">
           <div className="label">H</div>
           <input className="dimension" type="text" defaultValue={height} onChange={setter(setHeight)} />
+        </div>
+
+        <div className="dim">
+          <div>
+            <div>Start Color, X, Y:</div>
+            <div>Place a COLOR at X,Y instead of a blank</div>
+            <div>Set COLOR to empty to leave it blank</div>
+          </div>
+        </div>
+
+        <div className="dim">
+          <div className="label">Color</div>
+          <input className="dimension" type="text" defaultValue={char} onChange={(e) => setChar(e.target.value)} />
+        </div>
+
+        <div className="dim">
+          <div className="label">X,Y</div>
+          <input className="dimension" type="text" defaultValue={x} onChange={setter(setX)} />
+          <input className="dimension" type="text" defaultValue={y} onChange={setter(setY)} />
         </div>
 
         <div>

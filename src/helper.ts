@@ -92,8 +92,14 @@ export function stringToGrid(input: string, depth = 1): Grid3D {
   return { input: grid }
 }
 
-export function grid2D(opts: { start?: Coord2D; size?: Coord2D; char?: Color }): Grid2D {
-  const { start = [0, 0], size = [40, 20], char = 'W' } = opts
+export type Grid2DOpts = {
+  start?: Coord2D
+  size?: Coord2D
+  char?: Color
+}
+
+export function grid2D(opts: Grid2DOpts): Grid2D {
+  const { start = [0, 0], size = [40, 20], char = 'B' } = opts
   const [x, y] = start
   const [w, h] = size
 
@@ -108,7 +114,7 @@ export function grid2D(opts: { start?: Coord2D; size?: Coord2D; char?: Color }):
 }
 
 export function grid3D(opts: { start?: Coord3D; size?: Coord3D; char?: Color }): Grid3D {
-  const { start = [0, 0, 0], size = [40, 40, 40], char = 'W' } = opts
+  const { start = [0, 0, 0], size = [40, 40, 40], char = 'B' } = opts
   const [x, y, z] = start
   const [w, h, d] = size
 
@@ -136,6 +142,8 @@ export function draw(opts: DrawOpts) {
 }
 
 export function pretty(model: Model, seq?: Sequence) {
+  if (typeof window !== 'undefined') return
+
   const colors = colorize(model)
 
   for (let i = 0; i < colors.length; i++) {

@@ -21,10 +21,15 @@ export type Display = {
   borders: boolean
 }
 
+let VIEW: ViewControls
 let DISPLAY: Display
 
 export function getDisplay() {
   return { ...DISPLAY }
+}
+
+export function getView() {
+  return { ...VIEW }
 }
 
 const geometry = new THREE.BoxGeometry(SIZE, SIZE, SIZE)
@@ -105,10 +110,11 @@ export function setup(): ViewControls {
   const all = { scene, camera, raycaster, renderer, controls }
   animate(all)
 
+  VIEW = all
   return all
 }
 
-export function instancedGrid(model: Model, scene: THREE.Scene, borders = false): Display {
+export function instancedGrid(model: Model, borders = false): Display {
   if (DISPLAY) {
     DISPLAY.scene.remove(DISPLAY.cubes)
   }
@@ -118,10 +124,12 @@ export function instancedGrid(model: Model, scene: THREE.Scene, borders = false)
   const cubes = new THREE.InstancedMesh(geometry, cubeMaterial, count)
   const lines = new THREE.LineSegments(edges, lineMaterial)
 
-  DISPLAY = { cubes, lines, scene, borders }
+  cubes.position.set(0, 0, 0)
+
+  DISPLAY = { cubes, lines, scene: VIEW.scene, borders }
   updateInstanceGrid(model)
 
-  scene.add(cubes)
+  DISPLAY.scene.add(cubes)
 
   return DISPLAY
 }
@@ -246,4 +254,12 @@ function getViewportSize() {
   const height = ele.clientHeight
 
   return { width, height }
+}
+
+export function getModelSize(model: Model) {
+  const w = model.grid.input[0].length
+  const h = model.grid.input.length
+  const d = model.type === '3d' ? model.grid.input[0][0].length : 1
+
+  return { w, h, d }
 }

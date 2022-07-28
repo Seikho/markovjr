@@ -2,50 +2,19 @@ import { pretty } from './helper'
 import { applyRule, findMatches, validateGrid } from './transform'
 import { Model, Rule, Sequence } from './types'
 
-export function generate(model: Model) {
-  validateGrid(model)
+type TrackedModel = Model & { count: number; freq?: number }
 
-  const freq = model.log?.frequency
+export function generate(opts: Model) {
+  validateGrid(opts)
+  const model: TrackedModel = { ...opts, count: 0, freq: opts.log?.frequency }
   const sequences = model.rules.map(getSequences)
-  let count = 0
 
   for (const sequence of sequences) {
     while (true) {
       let matched = false
 
       for (const seq of sequence) {
-        seq.count++
-
-        if (seq.max && seq.count >= seq.max - 1) {
-          matched = false
-          break
-        }
-
-        const matches = findMatches(model, seq)
-        if (matches.length === 0) continue
-
-        count++
-        matched = true
-
-        if (seq.max === Infinity) {
-          for (const match of matches) {
-            applyRule(model, seq, match)
-          }
-
-          count += matches.length
-          seq.count = Infinity
-          if (freq) {
-            pretty(model)
-          }
-        } else {
-          const random = Math.floor(Math.random() * matches.length)
-          const match = matches[random]
-
-          applyRule(model, seq, match)
-          if (freq && count % freq === 0) {
-            pretty(model)
-          }
-        }
+        matched = applySequence(model, seq)
       }
 
       if (!matched) break
@@ -61,12 +30,10 @@ export function generate(model: Model) {
  * @param delay Delay between each step to allow rendering
  * @returns
  */
-export function slowGenerate(model: Model, delay: number, callback: (model: Model) => any) {
-  validateGrid(model)
-
-  const freq = model.log?.frequency
+export function slowGenerate(opts: Model, delay: number, callback: (model: Model) => any, onDone?: Function) {
+  validateGrid(opts)
+  const model: TrackedModel = { ...opts, count: 0, freq: opts.log?.frequency }
   const sequences = model.rules.map(getSequences)
-  let count = 0
 
   let stopped = false
 
@@ -76,36 +43,12 @@ export function slowGenerate(model: Model, delay: number, callback: (model: Mode
         let matched = false
 
         for (const seq of sequence) {
-          seq.count++
-
-          if (seq.max && seq.count > seq.max) {
-            matched = false
-            break
-          }
-
-          const matches = findMatches(model, seq)
-          if (matches.length === 0) continue
-
-          count++
-          matched = true
-
-          if (seq.max === Infinity) {
-            for (const match of matches) {
-              applyRule(model, seq, match)
-            }
-
-            count += matches.length
-            seq.count = Infinity
-            if (freq) {
-              await wait(delay)
-              callback(model)
-            }
+          matched = applySequence(model, seq)
+          if (seq.max === Infinity && model.freq) {
+            await wait(delay)
+            callback(model)
           } else {
-            const random = Math.floor(Math.random() * matches.length)
-            const match = matches[random]
-            applyRule(model, seq, match)
-
-            if (freq && count % freq === 0) {
+            if (model.freq && model.count % model.freq === 0) {
               await wait(delay)
               callback(model)
             }
@@ -115,13 +58,50 @@ export function slowGenerate(model: Model, delay: number, callback: (model: Mode
         if (!matched) break
       }
     }
+
+    onDone?.()
   }
 
   const stop = () => {
     stopped = true
   }
+
   runner()
   return { stop }
+}
+
+function applySequence(model: TrackedModel, seq: Sequence) {
+  if (seq.max && seq.max !== Infinity && seq.count >= seq.max) {
+    return false
+  }
+  seq.count++
+
+  let matches = findMatches(model, seq)
+  if (matches.length === 0) return false
+
+  model.count++
+
+  if (seq.max === Infinity) {
+    for (const match of matches) {
+      applyRule(model, seq, match)
+    }
+
+    model.count += matches.length
+    seq.count = Infinity
+    if (model.freq) {
+      pretty(model)
+    }
+  } else {
+    const random = Math.floor(Math.random() * matches.length)
+    const match = matches[random]
+
+    applyRule(model, seq, match)
+    if (model.freq && model.count % model.freq === 0) {
+      pretty(model)
+    }
+  }
+
+  return true
 }
 
 function wait(ms: number) {

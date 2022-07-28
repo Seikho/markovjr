@@ -13,7 +13,7 @@ const result = generate({
 
 pretty(result)
 
-function DungeonV1(): Rule[] {
+export function DungeonV1(): Rule[] {
   return [
     'PBB=**P',
     // Rooms
@@ -29,7 +29,7 @@ function DungeonV1(): Rule[] {
   ]
 }
 
-function DungeonV2(): Rule[] {
+export function DungeonV2(): Rule[] {
   return [
     'PBB=**P',
     // Rooms
