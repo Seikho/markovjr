@@ -24595,24 +24595,14 @@
     "build/src/models.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.river = exports.maze3D = exports.maze2D = exports.dungeon2D = exports.dungeon2DV2 = void 0;
+      exports.river = exports.maze3D = exports.maze2D = exports.dungeon2D = void 0;
       var helper_1 = require_helper();
-      function dungeon2DV2() {
-        return {
-          type: "2d",
-          grid: (0, helper_1.grid2D)({ start: [1, 1], size: [100, 60], char: "B" }),
-          rules: [
-            "B=P #1",
-            "PBB=**P #ALL"
-          ]
-        };
-      }
-      exports.dungeon2DV2 = dungeon2DV2;
       function dungeon2D() {
         return {
           type: "2d",
-          grid: (0, helper_1.grid2D)({ start: [1, 1], size: [100, 60], char: "P" }),
+          grid: (0, helper_1.grid2D)({ size: [100, 60] }),
           rules: [
+            "B=P #1",
             "PBB=**P #ALL",
             "BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #10",
             ["RBP=GGR", "GGR=RWW", "P=R"],
@@ -24629,8 +24619,8 @@
       function maze2D() {
         return {
           type: "2d",
-          grid: (0, helper_1.grid2D)({ size: [20, 20], start: [1, 1], char: "W" }),
-          rules: ["WBB=WAW"]
+          grid: (0, helper_1.grid2D)({ size: [20, 20] }),
+          rules: ["B=W #1", "WBB=WAW"]
         };
       }
       exports.maze2D = maze2D;
@@ -71706,6 +71696,8 @@
       exports.useModel = exports.useThree = void 0;
       var react_1 = require_react();
       var util_1 = require_util3();
+      var url = location.host.toLowerCase().includes("github.io") ? "markovjr/grids.js" : "dist/grids.js";
+      var worker = new Worker(url);
       function useThree(model, onDone) {
         const [load, result] = useModel(model);
         const generate = (model2) => {
@@ -71721,8 +71713,6 @@
       }
       exports.useThree = useThree;
       function useModel(initModel) {
-        const url = location.host.toLowerCase().includes("github.io") ? "markovjr/grids.js" : "dist/grids.js";
-        const worker = new Worker(url);
         const [result, setModel] = (0, react_1.useState)();
         worker.onmessage = (ev) => {
           setModel(ev.data);
@@ -71777,6 +71767,33 @@
     }
   });
 
+  // build/web/store.js
+  var require_store = __commonJS({
+    "build/web/store.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+      exports.saveModel = exports.loadModels = void 0;
+      var MODELS = "models";
+      var modelCache = {};
+      function loadModels() {
+        const json = localStorage.getItem(MODELS);
+        if (!json) {
+          modelCache = {};
+          localStorage.setItem(MODELS, JSON.stringify(modelCache));
+          return {};
+        }
+        modelCache = JSON.parse(json);
+        return modelCache;
+      }
+      exports.loadModels = loadModels;
+      function saveModel(name, model) {
+        modelCache[name] = model;
+        localStorage.setItem(MODELS, JSON.stringify(modelCache));
+      }
+      exports.saveModel = saveModel;
+    }
+  });
+
   // build/web/ModelForm.js
   var require_ModelForm = __commonJS({
     "build/web/ModelForm.js"(exports) {
@@ -71818,20 +71835,44 @@
       var React = __importStar(require_react());
       var models_1 = require_models();
       var src_1 = require_src();
+      var store_1 = require_store();
       var ModelForm = ({ generate, mode, setMode }) => {
-        const [x, setX] = React.useState(1);
-        const [y, setY] = React.useState(1);
-        const [char, setChar] = React.useState("W");
+        const [savedModels, setSavedModels] = React.useState((0, store_1.loadModels)());
         const [width, setWidth] = React.useState(64);
         const [height, setHeight] = React.useState(64);
         const [rules, setRules] = React.useState([""]);
+        const [name, setName] = React.useState("");
+        const savedNames = Object.keys(savedModels);
+        const save = () => {
+          (0, store_1.saveModel)(name, { width, height, rules });
+          setSavedModels((0, store_1.loadModels)());
+        };
         const useExample = (model) => {
           const rules2 = model.rules.map((rule) => Array.isArray(rule) ? rule.join(", ") : rule);
           setRules(rules2);
           callGenerate(model);
+          setWidth(model.grid.input[0].length);
+          setHeight(model.grid.input.length);
+        };
+        const useSavedModel = (name2) => {
+          const model = savedModels[name2];
+          setRules(model.rules);
+          setWidth(model.width);
+          setHeight(model.height);
+          setName(name2);
+          callGenerate({
+            type: "2d",
+            grid: (0, src_1.grid2D)({ size: [model.width, model.height] }),
+            rules: model.rules
+          });
         };
         const removeRule = (index) => {
           const next = rules.filter((_, i) => index !== i);
+          setRules(next);
+        };
+        const insertRule = (index) => {
+          const next = rules.slice(0, index).concat([""], rules.slice(index));
+          console.log(next);
           setRules(next);
         };
         const updateRule = (index) => (ev) => {
@@ -71848,11 +71889,11 @@
           const model = {
             type: "2d",
             grid: (0, src_1.grid2D)({ size: [width, height] }),
-            rules: rules.map((rule) => rule.includes(",") ? rule.split(",").map((r) => r.trim()) : rule)
+            rules: rules.filter((r) => !!r).map((rule) => rule.includes(",") ? rule.split(",").map((r) => r.trim()) : rule)
           };
           generate(model);
         };
-        const canGen = width > 0 && height > 0 && rules.length > 0 && rules.every((rule) => rule.trim() !== "") && x < width && y < height;
+        const canGen = width > 0 && height > 0 && rules.length > 0 && rules.some((rule) => rule.trim() !== "");
         const setter = (func) => {
           const handler = (ev) => {
             const value = Number(ev.target.value);
@@ -71864,7 +71905,7 @@
           };
           return handler;
         };
-        return React.createElement("div", { className: "form" }, React.createElement("div", { className: "dimensions" }, React.createElement("div", null, React.createElement("button", { onClick: () => useExample((0, models_1.river)()) }, "River"), React.createElement("button", { onClick: () => useExample((0, models_1.dungeon2D)()) }, "Dungeon 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.dungeon2DV2)()) }, "Dungeon 2D V2"), React.createElement("button", { onClick: () => useExample((0, models_1.maze2D)()) }, "Maze 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.maze3D)()) }, "Maze 3D")), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "Slow?"), React.createElement("input", { type: "checkbox", defaultChecked: mode === "slow", onChange: (ev) => setMode(ev.target.checked ? "slow" : "fast") })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "W"), React.createElement("input", { className: "dimension", type: "text", defaultValue: width, onChange: setter(setWidth) })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "H"), React.createElement("input", { className: "dimension", type: "text", defaultValue: height, onChange: setter(setHeight) })), React.createElement("div", { className: "dim" }, React.createElement("div", null, React.createElement("div", null, "Start Color, X, Y:"), React.createElement("div", null, "Place a COLOR at X,Y instead of a blank"), React.createElement("div", null, "Set COLOR to empty to leave it blank"))), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "Color"), React.createElement("input", { className: "dimension", type: "text", defaultValue: char, onChange: (e) => setChar(e.target.value) })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "X,Y"), React.createElement("input", { className: "dimension", type: "text", defaultValue: x, onChange: setter(setX) }), React.createElement("input", { className: "dimension", type: "text", defaultValue: y, onChange: setter(setY) })), React.createElement("div", null, React.createElement("button", { disabled: !canGen, onClick: () => callGenerate() }, "Generate"))), React.createElement("div", { className: "rules" }, React.createElement("div", null, "Rules - Separate nested rules using commas. See console for colors", " ", React.createElement("button", { onClick: () => setRules(rules.concat([""])) }, "Add")), rules.map((rule, i) => React.createElement("div", { key: i }, React.createElement("button", { onClick: () => removeRule(i) }, "-"), React.createElement("input", { className: "rule", type: "text", defaultValue: rule, onChange: updateRule(i) })))));
+        return React.createElement(React.Fragment, null, React.createElement("div", { className: "form" }, React.createElement("div", { className: "dimensions" }, React.createElement("div", null, React.createElement("button", { onClick: () => useExample((0, models_1.river)()) }, "River"), React.createElement("button", { onClick: () => useExample((0, models_1.dungeon2D)()) }, "Dungeon 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.maze2D)()) }, "Maze 2D"), React.createElement("button", { onClick: () => useExample((0, models_1.maze3D)()) }, "Maze 3D")), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "Slow?"), React.createElement("input", { type: "checkbox", defaultChecked: mode === "slow", onChange: (ev) => setMode(ev.target.checked ? "slow" : "fast") })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "W"), React.createElement("input", { className: "dimension", type: "text", value: width, onChange: setter(setWidth) })), React.createElement("div", { className: "dim" }, React.createElement("div", { className: "label" }, "H"), React.createElement("input", { className: "dimension", type: "text", value: height, onChange: setter(setHeight) })), React.createElement("div", null, React.createElement("button", { disabled: !canGen, onClick: () => callGenerate() }, "Generate"))), React.createElement("div", { className: "rules" }, React.createElement("div", null, React.createElement("div", null, "Rules - Separate nested rules using commas. See console for colors", " ", React.createElement("button", { onClick: () => setRules(rules.concat([""])) }, "Add")), React.createElement("div", { style: { display: "flex", flexDirection: "row", gap: "4px" } }, "Save Model", React.createElement("input", { type: "text", value: name, onChange: (ev) => setName(ev.target.value) }), React.createElement("button", { onClick: save }, "Save"))), rules.map((rule, i) => React.createElement("div", { key: i, style: { display: "flex", alignItems: "center" } }, React.createElement("button", { onClick: () => removeRule(i) }, "-"), React.createElement("button", { onClick: () => insertRule(i) }, "insert"), React.createElement("textarea", { className: "rule", value: rule, onChange: updateRule(i) }))))), React.createElement("div", null, React.createElement("div", null, "Saved Models"), savedNames.map((name2) => React.createElement("button", { key: name2, onClick: () => useSavedModel(name2) }, name2))));
       };
       exports.ModelForm = ModelForm;
     }

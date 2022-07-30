@@ -4,6 +4,10 @@ import { updateInstanceGrid } from './util'
 
 export type GridView = ReturnType<typeof useThree>
 
+const url = location.host.toLowerCase().includes('github.io') ? 'markovjr/grids.js' : 'dist/grids.js'
+
+const worker = new Worker(url)
+
 export function useThree(model: Model, onDone?: OnDone) {
   const [load, result] = useModel(model)
 
@@ -21,8 +25,6 @@ export function useThree(model: Model, onDone?: OnDone) {
 }
 
 export function useModel(initModel: Model) {
-  const url = location.host.toLowerCase().includes('github.io') ? 'markovjr/grids.js' : 'dist/grids.js'
-  const worker = new Worker(url)
   const [result, setModel] = useState<Model>()
 
   worker.onmessage = (ev) => {

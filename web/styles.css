@@ -48,6 +48,7 @@ input.dimension {
   gap: 4px;
 }
 
-input.rule {
-  width: calc(100% - 40px);
+textarea.rule {
+  width: calc(100% - 80px);
+  height: 20px;
 }
