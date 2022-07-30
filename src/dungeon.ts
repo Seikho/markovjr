@@ -8,7 +8,6 @@ const result = generate({
   type: '2d',
   grid: grid2D({ start: [1, 1], size: [100, 60], char: 'P' }),
   rules: DungeonV1(),
-  log: { frequency: 5 },
 })
 
 pretty(result)

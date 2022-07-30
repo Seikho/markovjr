@@ -31,10 +31,10 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   }, [ref])
 
   const fast = useThree(baseModel)
-  const slow = useSlowThree({ ...baseModel, log: { frequency: 1 } })
+  const slow = useSlowThree(baseModel)
   const render = mode === 'slow' ? slow : fast
 
-  const setPosition = (model: Model) => {
+  const setPosition = (_model: Model) => {
     const camera = getView().camera
     camera.lookAt(0, 0, 0)
     camera.updateProjectionMatrix()

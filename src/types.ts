@@ -4,14 +4,12 @@ export type Model2D = {
   type: '2d'
   grid: Grid2D
   rules: Rule[]
-  log?: { frequency: number }
 }
 
 export type Model3D = {
   type: '3d'
   grid: Grid3D
   rules: Rule[]
-  log?: { frequency: number }
 }
 
 export type Grid = Grid2D | Grid3D
@@ -37,3 +35,5 @@ export type Match2D = { x: number; y: number; dir: Dir2D }
 export type Match3D = { x: number; y: number; z: number; dir: Dir3D }
 
 export type Color = 'B' | 'I' | 'P' | 'E' | 'N' | 'D' | 'A' | 'W' | 'R' | 'O' | 'Y' | 'G' | 'U' | 'S' | 'K' | 'F'
+
+export type OnDone = (model: Model) => any

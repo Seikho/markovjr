@@ -134,7 +134,7 @@ export function grid3D(opts: { start?: Coord3D; size?: Coord3D; char?: Color }):
 
 export function draw(opts: DrawOpts) {
   const input = grid2D(opts)
-  const model = generate({ type: '2d', grid: input, rules: opts.rules, log: { frequency: 1 } })
+  const model = generate({ type: '2d', grid: input, rules: opts.rules })
 
   pretty(model)
 

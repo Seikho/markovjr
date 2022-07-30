@@ -25,7 +25,6 @@ const map: { [key: string]: () => void } = {
       type: '3d',
       grid: grid3D({ start: [1, 1, 1], size: [10, 10, 10] }),
       rules: ['WBB=WAW'],
-      log: { frequency: 5 },
     })
     console.log(colorize(model).toString())
   },
@@ -68,9 +67,7 @@ const map: { [key: string]: () => void } = {
           ],
           'WB=BW',
         ],
-        log: { frequency: 1 },
       },
-      5,
       (model) => pretty(model)
     )
   },

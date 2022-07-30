@@ -1,12 +1,11 @@
-import { pretty } from './helper'
 import { applyRule, findMatches, validateGrid } from './transform'
-import { Model, Rule, Sequence } from './types'
+import { Model, OnDone as ModelCallback, Rule, Sequence } from './types'
 
 type TrackedModel = Model & { count: number; freq?: number }
 
 export function generate(opts: Model) {
   validateGrid(opts)
-  const model: TrackedModel = { ...opts, count: 0, freq: opts.log?.frequency }
+  const model: TrackedModel = { ...opts, count: 0 }
   const sequences = model.rules.map(getSequences)
 
   for (const sequence of sequences) {
@@ -30,36 +29,43 @@ export function generate(opts: Model) {
  * @param delay Delay between each step to allow rendering
  * @returns
  */
-export function slowGenerate(opts: Model, delay: number, callback: (model: Model) => any, onDone?: Function) {
-  validateGrid(opts)
-  const model: TrackedModel = { ...opts, count: 0, freq: opts.log?.frequency }
-  const sequences = model.rules.map(getSequences)
 
+let INC = 1000 / 60
+let NEXT = 0
+
+async function render(cb: ModelCallback, model: Model) {
+  if (Date.now() >= NEXT) {
+    cb(model)
+    await delay(0)
+    NEXT += INC
+  }
+}
+
+export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: ModelCallback) {
+  validateGrid(opts)
+  const model: TrackedModel = { ...opts, count: 0 }
+  const sequences = model.rules.map(getSequences)
   let stopped = false
+  NEXT = Date.now() + INC
 
   const runner = async () => {
-    for (const sequence of sequences) {
-      while (!stopped) {
-        let matched = false
+    while (!stopped) {
+      for (const sequence of sequences) {
+        while (true) {
+          let matched = false
 
-        for (const seq of sequence) {
-          matched = applySequence(model, seq)
-          if (seq.max === Infinity && model.freq) {
-            await wait(delay)
-            callback(model)
-          } else {
-            if (model.freq && model.count % model.freq === 0) {
-              await wait(delay)
-              callback(model)
-            }
+          for (const seq of sequence) {
+            matched = applySequence(model, seq)
+            await render(callback, model)
           }
-        }
 
-        if (!matched) break
+          if (!matched) break
+        }
       }
     }
 
-    onDone?.()
+    callback(model)
+    onDone?.(model)
   }
 
   const stop = () => {
@@ -88,23 +94,17 @@ function applySequence(model: TrackedModel, seq: Sequence) {
 
     model.count += matches.length
     seq.count = Infinity
-    if (model.freq) {
-      pretty(model)
-    }
   } else {
     const random = Math.floor(Math.random() * matches.length)
     const match = matches[random]
 
     applyRule(model, seq, match)
-    if (model.freq && model.count % model.freq === 0) {
-      pretty(model)
-    }
   }
 
   return true
 }
 
-function wait(ms: number) {
+function delay(ms: number = 0) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 

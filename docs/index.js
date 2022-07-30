@@ -22839,11 +22839,10 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.slowGenerate = exports.generate = void 0;
-      var helper_1 = require_helper();
       var transform_1 = require_transform();
       function generate(opts) {
         (0, transform_1.validateGrid)(opts);
-        const model = { ...opts, count: 0, freq: opts.log?.frequency };
+        const model = { ...opts, count: 0 };
         const sequences = model.rules.map(getSequences);
         for (const sequence of sequences) {
           while (true) {
@@ -22858,32 +22857,37 @@
         return model;
       }
       exports.generate = generate;
-      function slowGenerate(opts, delay, callback, onDone) {
+      var INC = 1e3 / 60;
+      var NEXT = 0;
+      async function render(cb, model) {
+        if (Date.now() >= NEXT) {
+          cb(model);
+          await delay(0);
+          NEXT += INC;
+        }
+      }
+      function slowGenerate(opts, callback, onDone) {
         (0, transform_1.validateGrid)(opts);
-        const model = { ...opts, count: 0, freq: opts.log?.frequency };
+        const model = { ...opts, count: 0 };
         const sequences = model.rules.map(getSequences);
         let stopped = false;
+        NEXT = Date.now() + INC;
         const runner = async () => {
-          for (const sequence of sequences) {
-            while (!stopped) {
-              let matched = false;
-              for (const seq of sequence) {
-                matched = applySequence(model, seq);
-                if (seq.max === Infinity && model.freq) {
-                  await wait(delay);
-                  callback(model);
-                } else {
-                  if (model.freq && model.count % model.freq === 0) {
-                    await wait(delay);
-                    callback(model);
-                  }
+          while (!stopped) {
+            for (const sequence of sequences) {
+              while (true) {
+                let matched = false;
+                for (const seq of sequence) {
+                  matched = applySequence(model, seq);
+                  await render(callback, model);
                 }
+                if (!matched)
+                  break;
               }
-              if (!matched)
-                break;
             }
           }
-          onDone?.();
+          callback(model);
+          onDone?.(model);
         };
         const stop = () => {
           stopped = true;
@@ -22907,20 +22911,14 @@
           }
           model.count += matches.length;
           seq.count = Infinity;
-          if (model.freq) {
-            (0, helper_1.pretty)(model);
-          }
         } else {
           const random = Math.floor(Math.random() * matches.length);
           const match = matches[random];
           (0, transform_1.applyRule)(model, seq, match);
-          if (model.freq && model.count % model.freq === 0) {
-            (0, helper_1.pretty)(model);
-          }
         }
         return true;
       }
-      function wait(ms) {
+      function delay(ms = 0) {
         return new Promise((resolve) => setTimeout(resolve, ms));
       }
       function getSequences(rules) {
@@ -24569,7 +24567,7 @@
       exports.grid3D = grid3D;
       function draw(opts) {
         const input = grid2D(opts);
-        const model = (0, generate_1.generate)({ type: "2d", grid: input, rules: opts.rules, log: { frequency: 1 } });
+        const model = (0, generate_1.generate)({ type: "2d", grid: input, rules: opts.rules });
         pretty(model);
         return model;
       }
@@ -71691,9 +71689,7 @@
         } });
         const generate = (model2) => {
           stopper.stop();
-          const nextStop = (0, generate_1.slowGenerate)({ ...model2, log: { frequency: 1 } }, 1, (next) => {
-            (0, util_1.updateInstanceGrid)(next);
-          }, onDone);
+          const nextStop = (0, generate_1.slowGenerate)(model2, (next) => (0, util_1.updateInstanceGrid)(next), onDone);
           setStop(nextStop);
         };
         return { model, generate, stopper };
@@ -71719,7 +71715,7 @@
           if (!result)
             return;
           (0, util_1.updateInstanceGrid)(result);
-          onDone?.();
+          onDone?.(model);
         }, [result]);
         return { model, generate };
       }
@@ -71937,9 +71933,9 @@
           setView(view2);
         }, [ref]);
         const fast = (0, three_1.useThree)(baseModel);
-        const slow = (0, slow_three_1.useSlowThree)({ ...baseModel, log: { frequency: 1 } });
+        const slow = (0, slow_three_1.useSlowThree)(baseModel);
         const render = mode === "slow" ? slow : fast;
-        const setPosition = (model) => {
+        const setPosition = (_model) => {
           const camera = (0, util_1.getView)().camera;
           camera.lookAt(0, 0, 0);
           camera.updateProjectionMatrix();

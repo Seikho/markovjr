@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Model } from '../src'
+import { Model, OnDone } from '../src'
 import { updateInstanceGrid } from './util'
 
 export type GridView = ReturnType<typeof useThree>
 
-export function useThree(model: Model, onDone?: Function) {
+export function useThree(model: Model, onDone?: OnDone) {
   const [load, result] = useModel(model)
 
   const generate = (model: Model) => {
@@ -14,7 +14,7 @@ export function useThree(model: Model, onDone?: Function) {
   useEffect(() => {
     if (!result) return
     updateInstanceGrid(result)
-    onDone?.()
+    onDone?.(model)
   }, [result])
 
   return { model, generate }
