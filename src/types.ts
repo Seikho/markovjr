@@ -12,9 +12,16 @@ export type Model3D = {
   rules: Rule[]
 }
 
+export type Steps = {
+  seed?: () => number
+  all?: boolean
+  max?: number
+  count: number
+}
+
 export type Grid = Grid2D | Grid3D
-export type Rule = string | string[]
-export type Sequence = { from: string; to: string; max?: number; count: number }
+export type Rule = string
+export type Sequence = { from: string; to: string; steps: Steps }
 export type Point = Point2D | Point3D
 export type Direction = Dir2D | Dir3D
 export type Match = Match2D | Match3D
@@ -37,3 +44,21 @@ export type Match3D = { x: number; y: number; z: number; dir: Dir3D }
 export type Color = 'B' | 'I' | 'P' | 'E' | 'N' | 'D' | 'A' | 'W' | 'R' | 'O' | 'Y' | 'G' | 'U' | 'S' | 'K' | 'F'
 
 export type OnDone = (model: Model) => any
+
+export type Union = { symbol: string; union: Set<string> }
+
+export type ValidModel = ValidModel2D | ValidModel3D
+
+export type ValidModel2D = Model2D & {
+  count: number
+  freq?: number
+  sequences: Array<Sequence[]>
+  unions: { [symbol: string]: Set<string> }
+}
+
+export type ValidModel3D = Model3D & {
+  count: number
+  freq?: number
+  sequences: Array<Sequence[]>
+  unions: { [symbol: string]: Set<string> }
+}

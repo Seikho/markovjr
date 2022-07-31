@@ -11,13 +11,14 @@ export function dungeon2D(): Model {
       // Rooms
       'BPBPBPBPB/BBBBBBBBB/BPBPBPBPB/BBBBBBBBB/BPBPBPBPB=BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB/BWWWWWWWB #10',
       // MazeBacktracker
-      ['RBP=GGR', 'GGR=RWW', 'P=R'],
-      ['R=G #1'],
-      ['R=W #ALL'],
-      ['GWW=**G', 'GBW=*WG'],
-      ['GBG=*W* #5'],
-      ['G=W #ALL'],
-      ['BBB/BWB=BBB/BBB'],
+      'RBP=GGR, GGR=RWW, P=R',
+      'R=G #1',
+      'R=W #ALL',
+      'GWW=**G',
+      'GBW=*WG',
+      'GBG=*W* #5',
+      'G=W #ALL',
+      'BBB/BWB=BBB/BBB',
     ],
   }
 }
@@ -45,7 +46,7 @@ export function river(): Model {
     rules: [
       'B=W #1',
       'B=R #1',
-      ['RB=RR', 'WB=WW'],
+      'RB=RR, WB=WW',
       'RW=UU',
       'W=B #ALL',
       'R=B #ALL',
@@ -53,7 +54,7 @@ export function river(): Model {
       'BU/UB=U*/** #ALL',
       'UB=*G',
       'B=E #13',
-      ['EB=*E', 'GB=*G'],
+      'EB=*E, GB=*G',
     ],
   }
 }

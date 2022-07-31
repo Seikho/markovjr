@@ -56,7 +56,6 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
 
   const insertRule = (index: number) => {
     const next = rules.slice(0, index).concat([''], rules.slice(index))
-    console.log(next)
     setRules(next)
   }
 
@@ -75,7 +74,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
     const model: Model = {
       type: '2d',
       grid: grid2D({ size: [width, height] }),
-      rules: rules.filter((r) => !!r).map((rule) => (rule.includes(',') ? rule.split(',').map((r) => r.trim()) : rule)),
+      rules: rules.filter((r) => !!r),
     }
 
     generate(model)

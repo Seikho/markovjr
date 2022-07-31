@@ -1,4 +1,19 @@
-import { Dir2D, Dir3D, Input2D, Input3D, Match, Match2D, Match3D, Model, Point2D, Point3D, Sequence } from './types'
+import {
+  Dir2D,
+  Dir3D,
+  Input2D,
+  Input3D,
+  Match,
+  Match2D,
+  Match3D,
+  Model,
+  Point2D,
+  Point3D,
+  Sequence,
+  ValidModel,
+  ValidModel2D,
+  ValidModel3D,
+} from './types'
 
 const VALID_GRID = /[BIPENDAWROYGUSKF\ /]+/
 
@@ -8,10 +23,6 @@ export function validateGrid(model: Model) {
     if (typeof rules === 'string') {
       model.rules[i] = rules.replace(/\s+/, ' ')
       continue
-    }
-
-    for (let j = 0; j < rules.length; j++) {
-      rules[j] = rules[i].replace(/\s+/, ' ')
     }
   }
 
@@ -43,7 +54,7 @@ export function validateGrid(model: Model) {
   }
 }
 
-export function applyRule(model: Model, { from, to }: Sequence, match: Match) {
+export function applyRule(model: ValidModel, { from, to }: Sequence, match: Match) {
   if (model.type === '2d') {
     const start = { x: match.x, y: match.y }
     let curr: Point2D | undefined
@@ -73,12 +84,12 @@ export function applyRule(model: Model, { from, to }: Sequence, match: Match) {
   return
 }
 
-export function findMatches(model: Model, seq: Sequence): Match[] {
+export function findMatches(model: ValidModel, seq: Sequence): Match[] {
   const matches: Match[] = []
   if (model.type === '2d') {
     for (let y = 0; y < model.grid.input.length; y++) {
       for (let x = 0; x < model.grid.input[0].length; x++) {
-        matches.push(...findMatchesAt2D(model.grid.input, seq, x, y))
+        matches.push(...findMatchesAt2D(model, seq, x, y))
       }
     }
 
@@ -88,7 +99,7 @@ export function findMatches(model: Model, seq: Sequence): Match[] {
   for (let z = 0; z < model.grid.input.length; z++) {
     for (let y = 0; y < model.grid.input[0].length; y++) {
       for (let x = 0; x < model.grid.input[0][0].length; x++) {
-        matches.push(...findMatchesAt3D(model.grid.input, seq, x, y, z))
+        matches.push(...findMatchesAt3D(model, seq, x, y, z))
       }
     }
   }
@@ -98,7 +109,7 @@ export function findMatches(model: Model, seq: Sequence): Match[] {
 const DIR_2D: Dir2D[] = ['x+1', 'x-1', 'y+1', 'y-1']
 const DIR_3D: Dir3D[] = ['x+1', 'x-1', 'y+1', 'y-1', 'z+1', 'z-1']
 
-function findMatchesAt2D(inputs: Input2D, { from }: Sequence, x: number, y: number) {
+function findMatchesAt2D(model: ValidModel2D, { from }: Sequence, x: number, y: number) {
   const matches: Match2D[] = []
   const start = { x, y }
 
@@ -108,7 +119,8 @@ function findMatchesAt2D(inputs: Input2D, { from }: Sequence, x: number, y: numb
 
     for (let i = 0; i < from.length; i++) {
       let char = from[i]
-      curr = !curr ? { x, y } : next2D(inputs, start, curr, dir, char)
+
+      curr = !curr ? { x, y } : next2D(model.grid.input, start, curr, dir, char)
 
       if (!curr) {
         matched = false
@@ -117,7 +129,11 @@ function findMatchesAt2D(inputs: Input2D, { from }: Sequence, x: number, y: numb
 
       if (isYshift(char)) char = from[++i]
 
-      if (char !== '*' && char !== inputs[curr.y][curr.x]) {
+      if (model.unions[char] && model.unions[char].has(model.grid.input[curr.y][curr.x])) {
+        break
+      }
+
+      if (char !== '*' && char !== model.grid.input[curr.y][curr.x]) {
         matched = false
         break
       }
@@ -129,7 +145,7 @@ function findMatchesAt2D(inputs: Input2D, { from }: Sequence, x: number, y: numb
   return matches
 }
 
-function findMatchesAt3D(inputs: Input3D, { from }: Sequence, x: number, y: number, z: number) {
+function findMatchesAt3D(model: ValidModel3D, { from }: Sequence, x: number, y: number, z: number) {
   const matches: Match3D[] = []
   const start = { x, y, z }
 
@@ -139,7 +155,7 @@ function findMatchesAt3D(inputs: Input3D, { from }: Sequence, x: number, y: numb
 
     for (let i = 0; i < from.length; i++) {
       let char = from[i]
-      curr = !curr ? { x, y, z } : next3D(inputs, start, curr, dir, char)
+      curr = !curr ? { x, y, z } : next3D(model.grid.input, start, curr, dir, char)
 
       if (!curr) {
         matched = false
@@ -148,7 +164,12 @@ function findMatchesAt3D(inputs: Input3D, { from }: Sequence, x: number, y: numb
 
       if (isYshift(char)) char = from[++i]
 
-      if (char !== '*' && char !== inputs[curr.z][curr.y][curr.x]) {
+      if (model.unions[char] && !model.unions[char].has(model.grid.input[curr.z][curr.y][curr.x])) {
+        matched = false
+        break
+      }
+
+      if (char !== '*' && char !== model.grid.input[curr.z][curr.y][curr.x]) {
         matched = false
         break
       }
