@@ -29,7 +29,7 @@ export const hexColor: { [char in Color]: number } = {
   D: 0x5f5750,
   A: 0xe6e6e6,
   W: 0xfff1e8,
-  R: 0xff07fe,
+  R: 0xff074e,
   O: 0xffa108,
   Y: 0xfeeb2c,
   G: 0x00e339,

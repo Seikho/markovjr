@@ -3,6 +3,18 @@ import { Dir2D, Dir3D, Input2D, Input3D, Match, Match2D, Match3D, Model, Point2D
 const VALID_GRID = /[BIPENDAWROYGUSKF\ /]+/
 
 export function validateGrid(model: Model) {
+  for (let i = 0; i < model.rules.length; i++) {
+    const rules = model.rules[i]
+    if (typeof rules === 'string') {
+      model.rules[i] = rules.replace(/\s+/, ' ')
+      continue
+    }
+
+    for (let j = 0; j < rules.length; j++) {
+      rules[j] = rules[i].replace(/\s+/, ' ')
+    }
+  }
+
   if (model.type === '2d') {
     const length = model.grid.input[0].length
     for (const input of model.grid.input) {

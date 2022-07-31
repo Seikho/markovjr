@@ -22578,6 +22578,16 @@
       exports.findMatches = exports.applyRule = exports.validateGrid = void 0;
       var VALID_GRID = /[BIPENDAWROYGUSKF\ /]+/;
       function validateGrid(model) {
+        for (let i = 0; i < model.rules.length; i++) {
+          const rules = model.rules[i];
+          if (typeof rules === "string") {
+            model.rules[i] = rules.replace(/\s+/, " ");
+            continue;
+          }
+          for (let j = 0; j < rules.length; j++) {
+            rules[j] = rules[i].replace(/\s+/, " ");
+          }
+        }
         if (model.type === "2d") {
           const length = model.grid.input[0].length;
           for (const input of model.grid.input) {
@@ -22873,21 +22883,20 @@
         let stopped = false;
         NEXT = Date.now() + INC;
         const runner = async () => {
-          while (!stopped) {
-            for (const sequence of sequences) {
-              while (true) {
-                let matched = false;
-                for (const seq of sequence) {
-                  matched = applySequence(model, seq);
-                  await render(callback, model);
-                }
-                if (!matched)
-                  break;
+          for (const sequence of sequences) {
+            while (!stopped && true) {
+              let matched = false;
+              for (const seq of sequence) {
+                matched = applySequence(model, seq);
+                await render(callback, model);
               }
+              if (!matched)
+                break;
             }
           }
           callback(model);
           onDone?.(model);
+          stopped = true;
         };
         const stop = () => {
           stopped = true;
@@ -22922,13 +22931,15 @@
         return new Promise((resolve) => setTimeout(resolve, ms));
       }
       function getSequences(rules) {
-        const list = Array.isArray(rules) ? rules : [rules];
+        const list = Array.isArray(rules) ? rules : expandRules(rules);
         const seqs = [];
         for (const rule of list) {
           const [instruction, steps] = rule.split(" ");
           const pair = instruction.split("=");
-          if (steps && !steps.startsWith("#"))
+          if (steps && !steps.startsWith("#")) {
+            console.log(steps);
             throw new Error(`Steps must start with '#'`);
+          }
           if (pair[0].length !== pair[1].length)
             throw new Error(`{FROM} and {TO} patterns must be equal in length: ${instruction}`);
           for (let c = 0; c < pair[0].length; c++) {
@@ -22940,6 +22951,9 @@
           seqs.push({ from: pair[0], to: pair[1], max, count: 0 });
         }
         return seqs;
+      }
+      function expandRules(rules) {
+        return rules.split(",").map((rule) => rule.trim());
       }
     }
   });
@@ -24416,7 +24430,7 @@
         D: 6248272,
         A: 15132390,
         W: 16773608,
-        R: 16713726,
+        R: 16713550,
         O: 16752904,
         Y: 16706348,
         G: 58169,

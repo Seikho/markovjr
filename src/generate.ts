@@ -49,23 +49,22 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
   NEXT = Date.now() + INC
 
   const runner = async () => {
-    while (!stopped) {
-      for (const sequence of sequences) {
-        while (true) {
-          let matched = false
+    for (const sequence of sequences) {
+      while (!stopped && true) {
+        let matched = false
 
-          for (const seq of sequence) {
-            matched = applySequence(model, seq)
-            await render(callback, model)
-          }
-
-          if (!matched) break
+        for (const seq of sequence) {
+          matched = applySequence(model, seq)
+          await render(callback, model)
         }
+
+        if (!matched) break
       }
     }
 
     callback(model)
     onDone?.(model)
+    stopped = true
   }
 
   const stop = () => {
@@ -109,14 +108,17 @@ function delay(ms: number = 0) {
 }
 
 function getSequences(rules: Rule): Sequence[] {
-  const list = Array.isArray(rules) ? rules : [rules]
+  const list = Array.isArray(rules) ? rules : expandRules(rules)
   const seqs: Sequence[] = []
 
   for (const rule of list) {
     const [instruction, steps] = rule.split(' ')
     const pair = instruction.split('=')
 
-    if (steps && !steps.startsWith('#')) throw new Error(`Steps must start with '#'`)
+    if (steps && !steps.startsWith('#')) {
+      console.log(steps)
+      throw new Error(`Steps must start with '#'`)
+    }
 
     if (pair[0].length !== pair[1].length)
       throw new Error(`{FROM} and {TO} patterns must be equal in length: ${instruction}`)
@@ -131,4 +133,8 @@ function getSequences(rules: Rule): Sequence[] {
   }
 
   return seqs
+}
+
+function expandRules(rules: string) {
+  return rules.split(',').map((rule) => rule.trim())
 }
