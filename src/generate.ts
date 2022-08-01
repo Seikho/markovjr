@@ -158,7 +158,7 @@ function getSequences(rules: string, errors = true): Sequence {
       type: 'one',
       from: pair[0],
       to: pair[1],
-      steps: getSteps(steps),
+      steps: getSteps(steps, errors),
     }
 
     if (rule.steps.all) rule.type = 'all'
@@ -183,12 +183,13 @@ function expandRules(rules: string) {
   return rules.split(',').map((rule) => rule.trim())
 }
 
-function getSteps(input?: string): Steps {
+function getSteps(input: string, errors = true): Steps {
   const steps: Steps = { count: 0 }
   if (!input) return steps
 
   if (input.startsWith('#') === false) {
-    throw new Error(`Steps must start with '#', (${input})`)
+    if (errors) throw new Error(`Steps must start with '#', (${input})`)
+    return steps
   }
 
   if (input === '#ALL') {
@@ -201,11 +202,13 @@ function getSteps(input?: string): Steps {
     const [from, to] = [Number(range[0]), Number(range[1])]
 
     if (isNaN(from) || isNaN(to)) {
-      throw new Error(`Step range must be formatted: #{FROM}..{TO}`)
+      if (errors) throw new Error(`Step range must be formatted: #{FROM}..{TO}`)
+      return steps
     }
 
     if (from > to || from < 0 || to < 0) {
-      throw new Error(`Invalid step range: {FROM} must be below {TO} and both values must be above 0`)
+      if (errors) throw new Error(`Invalid step range: {FROM} must be below {TO} and both values must be above 0`)
+      return steps
     }
 
     steps.max = getRandom(from, to)
@@ -215,7 +218,8 @@ function getSteps(input?: string): Steps {
 
   const value = Number(input.slice(1))
   if (isNaN(value)) {
-    throw new Error(`Invalid step: Must follow be one of: #ALL, #{int}, #{from}..{to}`)
+    if (errors) throw new Error(`Invalid step: Must follow be one of: #ALL, #{int}, #{from}..{to}`)
+    return steps
   }
 
   steps.max = value

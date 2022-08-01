@@ -160,6 +160,15 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
               Generate
             </button>
           </div>
+
+          <div>
+            <div>Saved Model</div>
+            {savedNames.map((name) => (
+              <button key={name} onClick={() => useSavedModel(name)}>
+                {name}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="rules">
@@ -194,14 +203,6 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
           ))}
           <SequenceColors rules={selectedRules} />
         </div>
-      </div>
-      <div>
-        <div>Local Model</div>
-        {savedNames.map((name) => (
-          <button key={name} onClick={() => useSavedModel(name)}>
-            {name}
-          </button>
-        ))}
       </div>
     </>
   )
