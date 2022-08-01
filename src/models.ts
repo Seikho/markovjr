@@ -53,7 +53,7 @@ export function river(): Model {
       'BU/UB=U*/** #ALL',
       'UB=*G',
       'B=E #13',
-      'EB=*E, GB=*G',
+      'ONE EB=*E, GB=*G',
     ],
   }
 }
