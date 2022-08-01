@@ -110,16 +110,21 @@ function delay(ms: number = 80) {
 export function processSequences(inputs: string[], errors = true) {
   const sequences: ValidModel['sequences'] = []
   const unions: ValidModel['unions'] = {}
+
   for (const rules of inputs) {
-    if (rules.startsWith('UNION') || rules.startsWith('SYMBOL')) {
-      const [symbol, out] = rules
-        .split(' ')[1]
+    if (rules.toLowerCase().startsWith('union') || rules.toLowerCase().startsWith('symbol')) {
+      const [, ...input] = rules.split(' ')
+      if (!input.length) continue
+
+      const [symbol, union] = input
+        .join('')
         .split('=')
-        .map((val) => val.trim())
+        .map((v) => v.trim())
+      if (!symbol || !union) continue
 
       if (symbol.length > 1 && errors)
         throw new Error(`Invalid union symbol: Must be only one character. ({SYMBOL}={UNION})`)
-      unions[symbol] = new Set(out.split(''))
+      unions[symbol] = new Set(union.split(''))
 
       continue
     }

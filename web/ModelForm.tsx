@@ -23,6 +23,24 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   const [rules, setRules] = React.useState<string[]>(initialModel.rules)
   const [name, setName] = React.useState('')
   const [selected, setSelected] = React.useState(-1)
+  const [heights, setHeights] = React.useState(rules.map(() => 20))
+
+  const setTextareaHeight = (index: number, newHeight: number, styleHeight: string) => {
+    setHeights(
+      heights.map((h, i) => {
+        if (index !== i) return h
+        const realHeight = Number(styleHeight.replace('px', '').trim())
+        if (realHeight < newHeight && newHeight - realHeight >= 5) return newHeight
+        if (newHeight - h < 5) return h
+        return newHeight
+      })
+    )
+  }
+
+  React.useEffect(() => {
+    if (heights.length === rules.length) return
+    setHeights(rules.map((_, i) => heights[i] || 20))
+  }, [rules])
 
   const selectedRules = rules[selected]
 
@@ -72,6 +90,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   }
 
   const updateRule = (index: number) => (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextareaHeight(index, ev.target.scrollHeight, ev.target.style.height)
     const next = rules.map((rule, i) => {
       if (index !== i) return rule
       return ev.target.value
@@ -163,9 +182,13 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
               <button onClick={() => insertRule(i)}>insert</button>
               <textarea
                 className={`rule ${current === i ? 'current' : ''}`}
+                style={{ height: heights[i] }}
                 value={rule}
                 onChange={updateRule(i)}
-                onFocus={() => setSelected(i)}
+                onFocus={(ev) => {
+                  setSelected(i)
+                  setTextareaHeight(i, ev.target.scrollHeight, ev.target.style.height)
+                }}
               />
             </div>
           ))}
@@ -187,8 +210,20 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
 const SequenceColors: React.FC<{ rules: string }> = ({ rules }) => {
   if (!rules) return null
 
-  const { sequences } = processSequences([rules], false)
+  const { sequences, unions } = processSequences([rules], false)
   const [sequence] = sequences
+
+  const entries = Object.entries(unions)
+  if (!sequence && !entries.length) return null
+
+  if (entries.length) {
+    const [symbol, union] = entries[0]
+    return (
+      <>
+        <CharColors from={symbol} to={Array.from(union.keys()).join('')} />
+      </>
+    )
+  }
 
   return (
     <>
