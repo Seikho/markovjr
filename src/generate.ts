@@ -29,8 +29,6 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
   validateGrid(opts)
   const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0, rule: -1 }
 
-  console.log(model)
-
   STOPPED = false
   NEXT = Date.now() + INC
 
@@ -138,8 +136,6 @@ function getSequences(rules: string): Sequence {
     seq.type = 'one'
     rules = rules.slice(3).trim()
   }
-
-  console.log(rules)
 
   for (const input of expandRules(rules)) {
     const [instruction, steps] = input.split(' ')
