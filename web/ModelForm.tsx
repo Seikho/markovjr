@@ -7,16 +7,18 @@ import { loadModels, SavedModels, saveModel } from './store'
 type Mode = 'slow' | 'fast'
 
 type Props = {
+  initialModel: Model
   generate: (model: Model) => void
   mode: Mode
   setMode: (mode: Mode) => void
+  current: number
 }
 
-export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
+export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, initialModel }) => {
   const [savedModels, setSavedModels] = React.useState<SavedModels>(loadModels())
-  const [width, setWidth] = React.useState(64)
-  const [height, setHeight] = React.useState(64)
-  const [rules, setRules] = React.useState<Array<string>>([''])
+  const [width, setWidth] = React.useState(initialModel.grid.input[0].length)
+  const [height, setHeight] = React.useState(initialModel.grid.input.length)
+  const [rules, setRules] = React.useState<string[]>(initialModel.rules)
   const [name, setName] = React.useState('')
 
   const savedNames = Object.keys(savedModels)
@@ -148,7 +150,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode }) => {
             <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
               <button onClick={() => removeRule(i)}>-</button>
               <button onClick={() => insertRule(i)}>insert</button>
-              <textarea className="rule" value={rule} onChange={updateRule(i)} />
+              <textarea className={`rule ${current === i ? 'current' : ''}`} value={rule} onChange={updateRule(i)} />
             </div>
           ))}
         </div>

@@ -4,7 +4,7 @@ import { Model } from './types'
 export function dungeon2D(): Model {
   return {
     type: '2d',
-    grid: grid2D({ size: [100, 60] }),
+    grid: grid2D({ size: [50, 50] }),
     rules: [
       'B=P #1',
       'PBB=**P #ALL',
@@ -14,8 +14,7 @@ export function dungeon2D(): Model {
       'RBP=GGR, GGR=RWW, P=R',
       'R=G #1',
       'R=W #ALL',
-      'GWW=**G',
-      'GBW=*WG',
+      'GWW=**G, GBW=*WG',
       'GBG=*W* #5',
       'G=W #ALL',
       'BBB/BWB=BBB/BBB',
@@ -41,12 +40,12 @@ export function maze3D(): Model {
 
 export function river(): Model {
   return {
-    type: '3d',
-    grid: grid3D({ size: [40, 40, 1], char: 'B' }),
+    type: '2d',
+    grid: grid2D({ size: [40, 40], char: 'B' }),
     rules: [
       'B=W #1',
       'B=R #1',
-      'RB=RR, WB=WW',
+      'ONE RB=RR, WB=WW',
       'RW=UU',
       'W=B #ALL',
       'R=B #ALL',

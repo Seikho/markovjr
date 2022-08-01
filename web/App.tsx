@@ -8,7 +8,7 @@ import { getView, instancedGrid, onWindowResize, setup, ViewControls } from './u
 import { Model } from '../src/types'
 
 export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
-  const baseModel = models.maze2D()
+  const baseModel = models.river()
 
   const [mode, setMode] = React.useState<'slow' | 'fast'>('slow')
   const [ready, setReady] = React.useState(true)
@@ -60,7 +60,7 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   return (
     <>
       <div className="viewport" id="viewport" ref={ref}></div>
-      <ModelForm generate={generate} mode={mode} setMode={setMode} />
+      <ModelForm initialModel={baseModel} generate={generate} mode={mode} setMode={setMode} current={slow.current} />
     </>
   )
 }

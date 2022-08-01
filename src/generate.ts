@@ -3,14 +3,15 @@ import { Model, OnDone as ModelCallback, Rule, Sequence, Steps, ValidModel } fro
 
 export function generate(opts: Model) {
   validateGrid(opts)
-  const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0 }
+  const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0, rule: -1 }
 
   for (const sequence of model.sequences) {
     while (true) {
       let matched = false
 
-      for (const seq of sequence) {
-        matched = applySequence(model, seq)
+      for (const rule of sequence.rules) {
+        console.log(rule.from, rule.to)
+        matched = applySequenceRule(model, sequence, rule, matched)
       }
 
       if (!matched) break
@@ -20,26 +21,22 @@ export function generate(opts: Model) {
   return model
 }
 
-/**
- * Generate a model with a delay between each step
- * @param model
- * @param delay Delay between each step to allow rendering
- * @returns
- */
-
+let STOPPED = false
 export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: ModelCallback) {
   let INC = 1000 / 60
   let NEXT = 0
 
   validateGrid(opts)
-  const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0 }
+  const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0, rule: -1 }
 
-  let stopped = false
+  console.log(model)
+
+  STOPPED = false
   NEXT = Date.now() + INC
 
-  const render = async (cb: ModelCallback, model: Model) => {
+  const render = async () => {
     if (Date.now() >= NEXT) {
-      cb(model)
+      callback(model)
       await delay(0)
       NEXT += INC
     }
@@ -47,12 +44,15 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
 
   const runner = async () => {
     for (const sequence of model.sequences) {
-      while (!stopped && true) {
+      model.rule++
+      while (!STOPPED) {
         let matched = false
 
-        for (const seq of sequence) {
-          matched = applySequence(model, seq)
-          await render(callback, model)
+        for (const rule of sequence.rules) {
+          matched = applySequenceRule(model, sequence, rule, matched)
+          await render()
+
+          if (sequence.type === 'standard' && matched) break
         }
 
         if (!matched) break
@@ -61,11 +61,12 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
 
     callback(model)
     onDone?.(model)
-    stopped = true
+    stop()
   }
 
   const stop = () => {
-    stopped = true
+    STOPPED = true
+    model.rule = -1
   }
 
   runner()
@@ -73,35 +74,38 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
   return { stop }
 }
 
-function applySequence(model: ValidModel, seq: Sequence) {
-  if (seq.steps.max && !seq.steps.all && seq.steps.count >= seq.steps.max) {
-    return false
+function applySequenceRule(model: ValidModel, seq: Sequence, rule: Rule, matched: boolean) {
+  if (rule.steps.max && !rule.steps.all && rule.steps.count >= rule.steps.max) {
+    return matched || false
   }
-  seq.steps.count++
-
-  let matches = findMatches(model, seq)
-  if (matches.length === 0) return false
 
   model.count++
 
-  if (seq.steps.all) {
+  let matches = findMatches(model, rule)
+  if (matches.length === 0) return matched || false
+
+  if (rule.steps.all) {
     for (const match of matches) {
-      applyRule(model, seq, match)
+      applyRule(model, rule, match)
     }
 
     model.count += matches.length
-    seq.steps.count = Infinity
+    rule.steps.count = Infinity
   } else {
     const random = Math.floor(Math.random() * matches.length)
     const match = matches[random]
+    rule.steps.count++
+    applyRule(model, rule, match)
 
-    applyRule(model, seq, match)
+    if (seq.type === 'one') {
+      return true
+    }
   }
 
   return true
 }
 
-function delay(ms: number = 0) {
+function delay(ms: number = 80) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
@@ -127,13 +131,28 @@ function processRules(inputs: string[]) {
   return { sequences, unions: unions }
 }
 
-function getSequences(rules: Rule): Sequence[] {
-  const list = Array.isArray(rules) ? rules : expandRules(rules)
-  const seqs: Sequence[] = []
+function getSequences(rules: string): Sequence {
+  const seq: Sequence = { type: 'standard', rules: [] }
 
-  for (const rule of list) {
-    const [instruction, steps] = rule.split(' ')
+  if (rules.toLowerCase().startsWith('one')) {
+    seq.type = 'one'
+    rules = rules.slice(3).trim()
+  }
+
+  console.log(rules)
+
+  for (const input of expandRules(rules)) {
+    const [instruction, steps] = input.split(' ')
     const pair = instruction.split('=')
+
+    const rule: Rule = {
+      type: 'one',
+      from: pair[0],
+      to: pair[1],
+      steps: getSteps(steps),
+    }
+
+    if (rule.steps.all) rule.type = 'all'
 
     if (pair[0].length !== pair[1].length)
       throw new Error(`{FROM} and {TO} patterns must be equal in length: ${instruction}`)
@@ -143,10 +162,10 @@ function getSequences(rules: Rule): Sequence[] {
       }
     }
 
-    seqs.push({ from: pair[0], to: pair[1], steps: getSteps(steps) })
+    seq.rules.push(rule)
   }
 
-  return seqs
+  return seq
 }
 
 function expandRules(rules: string) {

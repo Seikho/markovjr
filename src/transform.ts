@@ -9,7 +9,7 @@ import {
   Model,
   Point2D,
   Point3D,
-  Sequence,
+  Rule,
   ValidModel,
   ValidModel2D,
   ValidModel3D,
@@ -54,7 +54,7 @@ export function validateGrid(model: Model) {
   }
 }
 
-export function applyRule(model: ValidModel, { from, to }: Sequence, match: Match) {
+export function applyRule(model: ValidModel, { from, to }: Rule, match: Match) {
   if (model.type === '2d') {
     const start = { x: match.x, y: match.y }
     let curr: Point2D | undefined
@@ -84,12 +84,12 @@ export function applyRule(model: ValidModel, { from, to }: Sequence, match: Matc
   return
 }
 
-export function findMatches(model: ValidModel, seq: Sequence): Match[] {
+export function findMatches(model: ValidModel, rule: Rule): Match[] {
   const matches: Match[] = []
   if (model.type === '2d') {
     for (let y = 0; y < model.grid.input.length; y++) {
       for (let x = 0; x < model.grid.input[0].length; x++) {
-        matches.push(...findMatchesAt2D(model, seq, x, y))
+        matches.push(...findMatchesAt2D(model, rule, x, y))
       }
     }
 
@@ -99,7 +99,7 @@ export function findMatches(model: ValidModel, seq: Sequence): Match[] {
   for (let z = 0; z < model.grid.input.length; z++) {
     for (let y = 0; y < model.grid.input[0].length; y++) {
       for (let x = 0; x < model.grid.input[0][0].length; x++) {
-        matches.push(...findMatchesAt3D(model, seq, x, y, z))
+        matches.push(...findMatchesAt3D(model, rule, x, y, z))
       }
     }
   }
@@ -109,7 +109,7 @@ export function findMatches(model: ValidModel, seq: Sequence): Match[] {
 const DIR_2D: Dir2D[] = ['x+1', 'x-1', 'y+1', 'y-1']
 const DIR_3D: Dir3D[] = ['x+1', 'x-1', 'y+1', 'y-1', 'z+1', 'z-1']
 
-function findMatchesAt2D(model: ValidModel2D, { from }: Sequence, x: number, y: number) {
+function findMatchesAt2D(model: ValidModel2D, { from }: Rule, x: number, y: number) {
   const matches: Match2D[] = []
   const start = { x, y }
 
@@ -145,7 +145,7 @@ function findMatchesAt2D(model: ValidModel2D, { from }: Sequence, x: number, y: 
   return matches
 }
 
-function findMatchesAt3D(model: ValidModel3D, { from }: Sequence, x: number, y: number, z: number) {
+function findMatchesAt3D(model: ValidModel3D, { from }: Rule, x: number, y: number, z: number) {
   const matches: Match3D[] = []
   const start = { x, y, z }
 

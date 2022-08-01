@@ -52,3 +52,7 @@ textarea.rule {
   width: calc(100% - 80px);
   height: 20px;
 }
+
+textarea.current {
+  background-color: goldenrod;
+}

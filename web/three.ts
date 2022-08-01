@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Model, OnDone } from '../src'
+import { Model, OnDone, ValidModel } from '../src'
 import { updateInstanceGrid } from './util'
 
 export type GridView = ReturnType<typeof useThree>
@@ -18,14 +18,14 @@ export function useThree(model: Model, onDone?: OnDone) {
   useEffect(() => {
     if (!result) return
     updateInstanceGrid(result)
-    onDone?.(model)
+    onDone?.(result)
   }, [result])
 
   return { model, generate }
 }
 
 export function useModel(initModel: Model) {
-  const [result, setModel] = useState<Model>()
+  const [result, setModel] = useState<ValidModel>()
 
   worker.onmessage = (ev) => {
     setModel(ev.data)
