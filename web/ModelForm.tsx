@@ -173,7 +173,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
         </div>
       </div>
       <div>
-        <div>Saved Models</div>
+        <div>Local Model</div>
         {savedNames.map((name) => (
           <button key={name} onClick={() => useSavedModel(name)}>
             {name}

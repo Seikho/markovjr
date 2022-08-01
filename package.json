@@ -9,8 +9,8 @@
     "start": "node build/src/dungeon.js",
     "build": "tsc",
     "bundle": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
-    "watch:docs": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=docs",
     "watch": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --watch",
+    "watch:docs": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=docs --watch",
     "serve": "concurrently -c bgBlack,bgBlue,bgBlue,bgRed -n http,tsc,es,docs \"yarn http-server -c-1 -o=index.html\" \"yarn build\" \"yarn watch\" \"yarn watch:docs\""
   },
   "keywords": [],

@@ -144,6 +144,11 @@ function getSequences(rules: string, errors = true): Sequence {
 
     if (pair[0] === pair[1]) continue
 
+    if (pair.length !== 2) {
+      if (errors) throw new Error(`Rules must follow format: {FROM}={TO}`)
+      pair.push('')
+    }
+
     const rule: Rule = {
       type: 'one',
       from: pair[0],
@@ -153,8 +158,10 @@ function getSequences(rules: string, errors = true): Sequence {
 
     if (rule.steps.all) rule.type = 'all'
 
-    if (pair[0].length !== pair[1].length && errors)
+    if (pair[0].length !== pair[1].length && errors) {
       throw new Error(`{FROM} and {TO} patterns must be equal in length: ${instruction}`)
+    }
+
     for (let c = 0; c < pair[0].length; c++) {
       if ((pair[0][c] === '/' && pair[1][c] !== '/') || (pair[0][c] !== '/' && pair[1][c] === '/')) {
         if (errors) throw new Error(`Step characters (/) must occur in the same positions: ${instruction}`)
