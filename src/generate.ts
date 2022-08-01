@@ -3,7 +3,7 @@ import { Model, OnDone as ModelCallback, Rule, Sequence, Steps, ValidModel } fro
 
 export function generate(opts: Model) {
   validateGrid(opts)
-  const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0, rule: -1 }
+  const model: ValidModel = { ...opts, ...processSequences(opts.rules), count: 0, rule: -1 }
 
   for (const sequence of model.sequences) {
     while (true) {
@@ -27,7 +27,7 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
   let NEXT = 0
 
   validateGrid(opts)
-  const model: ValidModel = { ...opts, ...processRules(opts.rules), count: 0, rule: -1 }
+  const model: ValidModel = { ...opts, ...processSequences(opts.rules), count: 0, rule: -1 }
 
   STOPPED = false
   NEXT = Date.now() + INC
@@ -107,7 +107,7 @@ function delay(ms: number = 80) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export function processRules(inputs: string[]) {
+export function processSequences(inputs: string[], errors = true) {
   const sequences: ValidModel['sequences'] = []
   const unions: ValidModel['unions'] = {}
   for (const rules of inputs) {
@@ -117,19 +117,20 @@ export function processRules(inputs: string[]) {
         .split('=')
         .map((val) => val.trim())
 
-      if (symbol.length > 1) throw new Error(`Invalid union symbol: Must be only one character. ({SYMBOL}={UNION})`)
+      if (symbol.length > 1 && errors)
+        throw new Error(`Invalid union symbol: Must be only one character. ({SYMBOL}={UNION})`)
       unions[symbol] = new Set(out.split(''))
 
       continue
     }
 
-    sequences.push(getSequences(rules))
+    sequences.push(getSequences(rules, errors))
   }
 
-  return { sequences, unions: unions }
+  return { sequences, unions }
 }
 
-function getSequences(rules: string): Sequence {
+function getSequences(rules: string, errors = true): Sequence {
   const seq: Sequence = { type: 'standard', rules: [] }
 
   if (rules.toLowerCase().startsWith('one')) {
@@ -141,6 +142,8 @@ function getSequences(rules: string): Sequence {
     const [instruction, steps] = input.split(' ')
     const pair = instruction.split('=')
 
+    if (pair[0] === pair[1]) continue
+
     const rule: Rule = {
       type: 'one',
       from: pair[0],
@@ -150,11 +153,11 @@ function getSequences(rules: string): Sequence {
 
     if (rule.steps.all) rule.type = 'all'
 
-    if (pair[0].length !== pair[1].length)
+    if (pair[0].length !== pair[1].length && errors)
       throw new Error(`{FROM} and {TO} patterns must be equal in length: ${instruction}`)
     for (let c = 0; c < pair[0].length; c++) {
       if ((pair[0][c] === '/' && pair[1][c] !== '/') || (pair[0][c] !== '/' && pair[1][c] === '/')) {
-        throw new Error(`Step characters (/) must occur in the same positions: ${instruction}`)
+        if (errors) throw new Error(`Step characters (/) must occur in the same positions: ${instruction}`)
       }
     }
 

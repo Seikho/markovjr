@@ -4,7 +4,7 @@ import { dungeon2D, maze2D, maze3D, river } from '../src/models'
 import { grid2D } from '../src'
 import { deleteModel, loadModels, SavedModels, saveModel } from './store'
 import { webColors } from '../src/util'
-import { processRules } from '../src/generate'
+import { processSequences } from '../src/generate'
 
 type Mode = 'slow' | 'fast'
 
@@ -86,7 +86,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
     const model: Model = {
       type: '2d',
       grid: grid2D({ size: [width, height] }),
-      rules: rules.filter((r) => !!r),
+      rules: rules.filter((r) => !!r).filter((r) => r.split('=')[0] !== r.split('=')[1]),
     }
 
     generate(model)
@@ -187,7 +187,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
 const SequenceColors: React.FC<{ rules: string }> = ({ rules }) => {
   if (!rules) return null
 
-  const { sequences } = processRules([rules])
+  const { sequences } = processSequences([rules], false)
   const [sequence] = sequences
 
   return (
