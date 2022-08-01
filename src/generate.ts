@@ -107,7 +107,7 @@ function delay(ms: number = 80) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function processRules(inputs: string[]) {
+export function processRules(inputs: string[]) {
   const sequences: ValidModel['sequences'] = []
   const unions: ValidModel['unions'] = {}
   for (const rules of inputs) {

@@ -24,3 +24,8 @@ export function saveModel(name: string, model: SavedModel) {
   modelCache[name] = model
   localStorage.setItem(MODELS, JSON.stringify(modelCache))
 }
+
+export function deleteModel(name: string) {
+  delete modelCache[name]
+  localStorage.setItem(MODELS, JSON.stringify(modelCache))
+}

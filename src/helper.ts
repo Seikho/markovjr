@@ -1,5 +1,5 @@
 import { generate } from './generate'
-import { Color, Grid2D, Grid3D, Input2D, Input3D, Model, Rule, Sequence } from './types'
+import { Color, Grid2D, Grid3D, Input2D, Input3D, Model } from './types'
 import { terminal, reset, iterate3D, iterate2D } from './util'
 
 type Coord2D = [number, number] | readonly [number, number]
@@ -9,7 +9,7 @@ type DrawOpts = {
   start?: Coord2D
   size?: Coord2D
   char?: Color
-  rules: Rule[]
+  rules: string[]
 }
 
 export function colorize(model: Model) {
@@ -141,7 +141,7 @@ export function draw(opts: DrawOpts) {
   return model
 }
 
-export function pretty(model: Model, seq?: Sequence) {
+export function pretty(model: Model) {
   if (typeof window !== 'undefined') return
 
   const colors = colorize(model)
@@ -150,10 +150,5 @@ export function pretty(model: Model, seq?: Sequence) {
     process.stdout.cursorTo(0, i)
     process.stdout.clearLine(0)
     process.stdout.write(colors[i] + '\n')
-  }
-
-  if (seq) {
-    process.stdout.clearLine(0)
-    process.stdout.write(`${seq.from}=${seq.to}`)
   }
 }

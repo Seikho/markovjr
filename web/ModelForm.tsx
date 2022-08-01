@@ -2,7 +2,9 @@ import * as React from 'react'
 import { Model } from '../src/types'
 import { dungeon2D, maze2D, maze3D, river } from '../src/models'
 import { grid2D } from '../src'
-import { loadModels, SavedModels, saveModel } from './store'
+import { deleteModel, loadModels, SavedModels, saveModel } from './store'
+import { webColors } from '../src/util'
+import { processRules } from '../src/generate'
 
 type Mode = 'slow' | 'fast'
 
@@ -20,11 +22,19 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   const [height, setHeight] = React.useState(initialModel.grid.input.length)
   const [rules, setRules] = React.useState<string[]>(initialModel.rules)
   const [name, setName] = React.useState('')
+  const [selected, setSelected] = React.useState(-1)
+
+  const selectedRules = rules[selected]
 
   const savedNames = Object.keys(savedModels)
 
   const save = () => {
     saveModel(name, { width, height, rules })
+    setSavedModels(loadModels())
+  }
+
+  const remove = () => {
+    deleteModel(name)
     setSavedModels(loadModels())
   }
 
@@ -143,6 +153,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
               Save Model
               <input type="text" value={name} onChange={(ev) => setName(ev.target.value)} />
               <button onClick={save}>Save</button>
+              <button onClick={remove}>Delete Model</button>
             </div>
           </div>
 
@@ -150,9 +161,15 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
             <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
               <button onClick={() => removeRule(i)}>-</button>
               <button onClick={() => insertRule(i)}>insert</button>
-              <textarea className={`rule ${current === i ? 'current' : ''}`} value={rule} onChange={updateRule(i)} />
+              <textarea
+                className={`rule ${current === i ? 'current' : ''}`}
+                value={rule}
+                onChange={updateRule(i)}
+                onFocus={() => setSelected(i)}
+              />
             </div>
           ))}
+          <SequenceColors rules={selectedRules} />
         </div>
       </div>
       <div>
@@ -164,5 +181,61 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
         ))}
       </div>
     </>
+  )
+}
+
+const SequenceColors: React.FC<{ rules: string }> = ({ rules }) => {
+  if (!rules) return null
+
+  const { sequences } = processRules([rules])
+  const [sequence] = sequences
+
+  return (
+    <>
+      {sequence.rules.map(({ from, to }, i) => (
+        <CharColors key={i} from={from} to={to} />
+      ))}
+    </>
+  )
+}
+
+const CharColors: React.FC<{ from: string; to: string }> = ({ from, to }) => {
+  const froms = from.split('/')
+  const tos = to.split('/')
+
+  return (
+    <div className="color-grid">
+      <div className="color-rows">
+        {froms.map((chars, i) => (
+          <ColorRow key={i} chars={chars} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <code>=&gt;</code>
+      </div>
+      <div className="color-rows">
+        {tos.map((chars, i) => (
+          <ColorRow key={i} chars={chars} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const ColorRow: React.FC<{ chars: string }> = ({ chars }) => {
+  return (
+    <div className="color-row">
+      {chars.split('').map((char, i) => {
+        const color = webColors[char]
+        if (!color)
+          return (
+            <span key={i} className="square">
+              {char}
+            </span>
+          )
+
+        return <span key={i} className="square" style={{ backgroundColor: color, border: '1px solid black' }}></span>
+      })}
+    </div>
   )
 }

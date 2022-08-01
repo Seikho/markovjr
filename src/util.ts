@@ -39,10 +39,15 @@ export const hexColor: { [char in Color]: number } = {
   F: 0xffcaa8,
 }
 
+export const webColors = Object.entries(hexColor).reduce((prev, [key, hex]) => {
+  prev[key] = '#' + hex.toString(16).padStart(6, '0')
+  return prev
+}, {} as { [char: string]: string })
+
 if (typeof window !== 'undefined') {
-  const colors = Object.keys(terminal) as Color[]
+  const colors = Object.keys(terminal).sort((l, r) => (l > r ? 1 : -1)) as Color[]
   for (const key of colors) {
-    const color = '#' + terminal[key](hexColor[key].toString(16)).padStart(6, '0')
+    const color = terminal[key](webColors[key])
     console.log(`${key}: %c           `, `background: ${color};`)
   }
 }

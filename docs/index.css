@@ -47,4 +47,30 @@ textarea.rule {
 textarea.current {
   background-color: goldenrod;
 }
+.square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid black;
+}
+.color-grid {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  justify-content: center;
+}
+.color-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.color-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+}
 /*# sourceMappingURL=index.css.map */

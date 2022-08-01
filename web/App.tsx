@@ -8,7 +8,7 @@ import { getView, instancedGrid, onWindowResize, setup, ViewControls } from './u
 import { Model } from '../src/types'
 
 export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
-  const baseModel = models.river()
+  const baseModel = models.dungeon2D()
 
   const [mode, setMode] = React.useState<'slow' | 'fast'>('slow')
   const [ready, setReady] = React.useState(true)
