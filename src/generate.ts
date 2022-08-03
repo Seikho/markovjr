@@ -1,9 +1,11 @@
 import { applyRule, findMatches, validateGrid } from './transform'
 import { Model, OnDone as ModelCallback, Rule, Sequence, Steps, ValidModel } from './types'
 
+let ID = 0
+
 export function generate(opts: Model) {
   validateGrid(opts)
-  const model: ValidModel = { ...opts, ...processSequences(opts.rules), count: 0, rule: -1 }
+  const model: ValidModel = { ...opts, ...processSequences(opts.rules), count: 0, rule: -1, id: 0 }
 
   for (const sequence of model.sequences) {
     while (true) {
@@ -21,15 +23,13 @@ export function generate(opts: Model) {
   return model
 }
 
-let STOPPED = false
 export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: ModelCallback) {
   let INC = 1000 / 60
   let NEXT = 0
 
   validateGrid(opts)
-  const model: ValidModel = { ...opts, ...processSequences(opts.rules), count: 0, rule: -1 }
+  const model: ValidModel = { ...opts, ...processSequences(opts.rules), count: 0, rule: -1, id: ++ID }
 
-  STOPPED = false
   NEXT = Date.now() + INC
 
   const render = async () => {
@@ -43,10 +43,11 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
   const runner = async () => {
     for (const sequence of model.sequences) {
       model.rule++
-      while (!STOPPED) {
+      while (ID === model.id) {
         let matched = false
 
         for (const rule of sequence.rules) {
+          if (ID !== model.id) return
           matched = applySequenceRule(model, sequence, rule, matched)
           await render()
 
@@ -63,13 +64,17 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
   }
 
   const stop = () => {
-    STOPPED = true
     model.rule = -1
+    model.id = -1
   }
 
   runner()
 
   return { stop }
+}
+
+function delay(ms = 0) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function applySequenceRule(model: ValidModel, seq: Sequence, rule: Rule, matched: boolean) {
@@ -101,10 +106,6 @@ function applySequenceRule(model: ValidModel, seq: Sequence, rule: Rule, matched
   }
 
   return true
-}
-
-function delay(ms: number = 80) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function processSequences(inputs: string[], errors = true) {

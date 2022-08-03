@@ -1,6 +1,17 @@
-import { generate } from '../src'
+import { Model } from '../src'
+import { generate, slowGenerate } from '../src/generate'
 
-onmessage = (ev) => {
-  const result = generate(ev.data)
+type Opts = {
+  type: 'slow' | 'fast'
+  model: Model
+}
+
+onmessage = ({ data: { model, type } }: MessageEvent<Opts>) => {
+  if (type === 'slow') {
+    slowGenerate(model, (model) => postMessage(model))
+    return
+  }
+
+  const result = generate(model)
   postMessage(result)
 }

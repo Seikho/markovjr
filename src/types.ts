@@ -53,6 +53,7 @@ export type Union = { symbol: string; union: Set<string> }
 export type ValidModel = ValidModel2D | ValidModel3D
 
 export type ValidModel2D = Model2D & {
+  id: number
   rule: number
   count: number
   freq?: number
@@ -61,6 +62,7 @@ export type ValidModel2D = Model2D & {
 }
 
 export type ValidModel3D = Model3D & {
+  id: number
   rule: number
   count: number
   freq?: number

@@ -1,9 +1,9 @@
 {
   "name": "markovjr",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "",
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node build/src/dungeon.js",
@@ -11,7 +11,8 @@
     "bundle": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist",
     "watch": "esbuild build/web/index.js --sourcemap --bundle --outdir=dist --watch",
     "watch:docs": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=docs --watch",
-    "serve": "concurrently -c bgBlack,bgBlue,bgBlue,bgRed -n http,tsc,es,docs \"yarn http-server -c-1 -o=index.html\" \"yarn build\" \"yarn watch\" \"yarn watch:docs\""
+    "watch:worker": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist --watch",
+    "serve": "concurrently -c bgBlack,bgBlue,bgBlue,bgRed,bgRed -n http,tsc,es,docs,wkr \"yarn http-server -c-1 -o=index.html\" \"yarn build\" \"yarn watch\" \"yarn watch:docs\" \"yarn watch:worker\""
   },
   "keywords": [],
   "author": "",

@@ -1,7 +1,6 @@
 import './styles.css'
 import React, { useEffect, useRef } from 'react'
 import * as models from '../src/models'
-import { useSlowThree } from './slow-three'
 import { useThree } from './three'
 import { ModelForm } from './ModelForm'
 import { getView, instancedGrid, onWindowResize, setup, ViewControls } from './util'
@@ -30,9 +29,7 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
     setView(view)
   }, [ref])
 
-  const fast = useThree(baseModel)
-  const slow = useSlowThree(baseModel)
-  const render = mode === 'slow' ? slow : fast
+  const gen = useThree(baseModel)
 
   const setPosition = (_model: Model) => {
     const camera = getView().camera
@@ -43,7 +40,7 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const generate = (model: Model) => {
     instancedGrid(model)
     setPosition(model)
-    render.generate(model)
+    gen.generate(mode, model)
   }
 
   useEffect(() => {
@@ -60,7 +57,13 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   return (
     <>
       <div className="viewport" id="viewport" ref={ref}></div>
-      <ModelForm initialModel={baseModel} generate={generate} mode={mode} setMode={setMode} current={slow.current} />
+      <ModelForm
+        initialModel={baseModel}
+        generate={generate}
+        mode={mode}
+        setMode={setMode}
+        current={gen.model?.rule || -1}
+      />
     </>
   )
 }
