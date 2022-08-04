@@ -120,7 +120,7 @@ export function processSequences(inputs: string[], errors = true) {
       const [symbol, union] = input
         .join('')
         .split('=')
-        .map((v) => v.trim())
+        .map((v) => v.replace(/\s/g, ''))
       if (!symbol || !union) continue
 
       if (symbol.length > 1 && errors)
@@ -145,8 +145,11 @@ function getSequences(rules: string, errors = true): Sequence {
   }
 
   for (const input of expandRules(rules)) {
-    const [instruction, steps] = input.split(' ')
-    const pair = instruction.split('=')
+    const [instruction, steps] = input
+      .replace(/\s+/g, ' ')
+      .replace(/(\s*)=(\s*)/, '=')
+      .split(' ')
+    const pair = instruction.replace(/\s/g, '').split('=')
 
     if (pair[0] === pair[1]) continue
 
