@@ -12,6 +12,7 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
   const [mode, setMode] = React.useState<'slow' | 'fast'>('slow')
   const [ready, setReady] = React.useState(true)
   const [view, setView] = React.useState<ViewControls>()
+  const [outcome, setOutcome] = React.useState('')
 
   const ref = useRef<HTMLDivElement>(null)
 
@@ -29,7 +30,9 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
     setView(view)
   }, [ref])
 
-  const gen = useThree(baseModel)
+  const gen = useThree(baseModel, (model) => {
+    setOutcome(model.grid.input.join('\n'))
+  })
 
   const setPosition = (_model: Model) => {
     const camera = getView().camera
@@ -63,6 +66,7 @@ export const App: React.FC<{ borders?: boolean }> = ({ borders }) => {
         mode={mode}
         setMode={setMode}
         current={gen.model?.rule || -1}
+        outcome={outcome}
       />
     </>
   )

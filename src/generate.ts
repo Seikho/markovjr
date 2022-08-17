@@ -11,6 +11,10 @@ export function generate(opts: Model) {
     while (true) {
       let matched = false
 
+      if (sequence.type === 'random') {
+        shuffle(sequence.rules)
+      }
+
       for (const rule of sequence.rules) {
         matched = applySequenceRule(model, sequence, rule, matched)
       }
@@ -45,12 +49,16 @@ export function slowGenerate(opts: Model, callback: ModelCallback, onDone?: Mode
       while (ID === model.id) {
         let matched = false
 
+        if (sequence.type === 'random') {
+          shuffle(sequence.rules)
+        }
+
         for (const rule of sequence.rules) {
           if (ID !== model.id) return
           matched = applySequenceRule(model, sequence, rule, matched)
           await render()
 
-          if (sequence.type === 'standard' && matched) break
+          if (sequence.type !== 'one' && matched) break
         }
 
         if (!matched) break
@@ -143,6 +151,11 @@ function getSequences(rules: string, errors = true): Sequence {
     rules = rules.slice(3).trim()
   }
 
+  if (rules.toLowerCase().startsWith('random')) {
+    seq.type = 'random'
+    rules = rules.slice(6).trim()
+  }
+
   for (const input of expandRules(rules)) {
     const [instruction, steps] = input
       .replace(/\s+/g, ' ')
@@ -231,4 +244,15 @@ function getSteps(input: string, errors = true): Steps {
 
 function getRandom(from: number, to: number) {
   return Math.floor(Math.random() * (to - from + 1) + from)
+}
+
+function shuffle(list: any[]) {
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const temp = list[i]
+    list[i] = list[j]
+    list[j] = temp
+  }
+
+  return list
 }

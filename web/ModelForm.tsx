@@ -14,9 +14,10 @@ type Props = {
   mode: Mode
   setMode: (mode: Mode) => void
   current: number
+  outcome: string
 }
 
-export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, initialModel }) => {
+export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, initialModel, outcome }) => {
   const [savedModels, setSavedModels] = React.useState<SavedModels>(loadModels())
   const [width, setWidth] = React.useState(initialModel.grid.input[0].length)
   const [height, setHeight] = React.useState(initialModel.grid.input.length)
@@ -99,14 +100,20 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
     setRules(next)
   }
 
-  const callGenerate = (existing?: Model) => {
-    if (existing) return generate(existing)
-
+  const sanitiseInputs = () => {
     const model: Model = {
       type: '2d',
       grid: grid2D({ size: [width, height] }),
       rules: rules.filter((r) => !!r).filter((r) => r.split('=')[0] !== r.split('=')[1]),
     }
+
+    return model
+  }
+
+  const callGenerate = (existing?: Model) => {
+    if (existing) return generate(existing)
+
+    const model = sanitiseInputs()
 
     generate(model)
   }
@@ -202,9 +209,47 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
             </div>
           ))}
           <SequenceColors rules={selectedRules} />
+          <Output
+            model={sanitiseInputs()}
+            outcome={outcome}
+            onImport={(json) => {
+              const model = JSON.parse(json)
+              setWidth(model.grid[0])
+              setHeight(model.grid[1])
+              setRules(model.rules)
+            }}
+          />
         </div>
       </div>
     </>
+  )
+}
+
+const Output: React.FC<{ model: Model; outcome: string; onImport: (mode: string) => void }> = ({
+  model,
+  onImport,
+  outcome,
+}) => {
+  const json = JSON.stringify(
+    { type: model.type, rules: model.rules, grid: [model.grid.input[0].length, model.grid.input.length] },
+    null,
+    2
+  )
+  const [imp, setImport] = React.useState('')
+
+  return (
+    <div>
+      <div>
+        <button onClick={() => onImport(imp)}>Import</button>
+        <input defaultValue="" onChange={(ev) => setImport(ev.target.value)} />
+      </div>
+
+      <div>
+        <pre>{json}</pre>
+      </div>
+
+      <textarea value={outcome} style={{ minHeight: '60px', width: '100%', marginBottom: '60px' }} />
+    </div>
   )
 }
 

@@ -19,7 +19,7 @@ export type Steps = {
   count: number
 }
 
-export type SeqType = 'standard' | 'one'
+export type SeqType = 'standard' | 'one' | 'random'
 export type RuleType = 'all' | 'one'
 
 export type Grid = Grid2D | Grid3D
