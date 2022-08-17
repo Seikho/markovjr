@@ -12,7 +12,6 @@ export function generate(opts: Model) {
       let matched = false
 
       for (const rule of sequence.rules) {
-        console.log(rule.from, rule.to)
         matched = applySequenceRule(model, sequence, rule, matched)
       }
 
