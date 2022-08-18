@@ -1,10 +1,10 @@
 const MODELS = 'models'
 
 export type SavedModels = {
-  [name: string]: { width: number; height: number; rules: string[] }
+  [name: string]: SavedModel
 }
 
-export type SavedModel = { width: number; height: number; rules: string[] }
+export type SavedModel = { width: number; height: number; rules: string[]; start: string }
 
 let modelCache: SavedModels = {}
 

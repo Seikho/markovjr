@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Model } from '../src/types'
+import { Color, Model } from '../src/types'
 import { dungeon2D, maze2D, maze3D, river } from '../src/models'
 import { grid2D } from '../src'
 import { deleteModel, loadModels, SavedModels, saveModel } from './store'
@@ -21,9 +21,17 @@ type FormModel = {
   type: '2d'
   grid: [number, number]
   rules: string[]
+  start: string
 }
 
-export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, initialModel, outcome }) => {
+export const ModelForm: React.FC<Props> = ({
+  generate,
+  mode,
+  setMode,
+  current,
+  initialModel,
+  outcome,
+}) => {
   const [savedModels, setSavedModels] = React.useState<SavedModels>(loadModels())
   const [width, setWidth] = React.useState(initialModel.grid.input[0].length)
   const [height, setHeight] = React.useState(initialModel.grid.input.length)
@@ -31,6 +39,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   const [name, setName] = React.useState('')
   const [selected, setSelected] = React.useState(-1)
   const [heights, setHeights] = React.useState(rules.map(() => 20))
+  const [start, setStart] = React.useState('B')
 
   const setTextareaHeight = (index: number, newHeight: number, styleHeight: string) => {
     setHeights(
@@ -54,7 +63,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   const savedNames = Object.keys(savedModels)
 
   const save = () => {
-    saveModel(name, { width, height, rules })
+    saveModel(name, { width, height, rules, start })
     setSavedModels(loadModels())
   }
 
@@ -77,11 +86,12 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
     setRules(model.rules)
     setWidth(model.width)
     setHeight(model.height)
+    setStart(model.start)
     setName(name)
 
     callGenerate({
       type: '2d',
-      grid: grid2D({ size: [model.width, model.height] }),
+      grid: grid2D({ size: [model.width, model.height], char: model.start as Color }),
       rules: model.rules,
     })
   }
@@ -109,7 +119,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   const sanitiseInputs = () => {
     const model: Model = {
       type: '2d',
-      grid: grid2D({ size: [width, height] }),
+      grid: grid2D({ size: [width, height], char: start as Color }),
       rules: rules.filter((r) => !!r).filter((r) => r.split('=')[0] !== r.split('=')[1]),
     }
 
@@ -121,6 +131,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
       type: '2d',
       grid: [width, height],
       rules: rules.filter((r) => !!r).filter((r) => r.split('=')[0] !== r.split('=')[1]),
+      start,
     }
   }
 
@@ -132,7 +143,8 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
     generate(model)
   }
 
-  const canGen = width > 0 && height > 0 && rules.length > 0 && rules.some((rule) => rule.trim() !== '')
+  const canGen =
+    width > 0 && height > 0 && rules.length > 0 && rules.some((rule) => rule.trim() !== '')
 
   const setter = (func: (val: number) => void) => {
     const handler = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,6 +186,17 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
           <div className="dim">
             <div className="label">H</div>
             <input className="dimension" type="text" value={height} onChange={setter(setHeight)} />
+          </div>
+
+          <div className="dim">
+            <div className="label">Char</div>
+            <input
+              className="dimension"
+              type="text"
+              value={start}
+              onChange={(ev) => setStart(ev.target.value.slice(0, 1))}
+              maxLength={1}
+            />
           </div>
 
           <div>
@@ -245,7 +268,12 @@ const Output: React.FC<{ model: FormModel; outcome: string; onImport: (mode: str
   outcome,
 }) => {
   const json = JSON.stringify(
-    { type: model.type, rules: model.rules, grid: [model.grid[0] ?? 0, model.grid[1] ?? 0] },
+    {
+      type: model.type,
+      rules: model.rules,
+      grid: [model.grid[0] ?? 0, model.grid[1] ?? 0],
+      start: model.start,
+    },
     null,
     2
   )
@@ -262,7 +290,11 @@ const Output: React.FC<{ model: FormModel; outcome: string; onImport: (mode: str
         <pre>{json}</pre>
       </div>
 
-      <textarea value={outcome} style={{ minHeight: '60px', width: '100%', marginBottom: '60px' }} />
+      <textarea
+        readOnly
+        value={outcome}
+        style={{ minHeight: '60px', width: '100%', marginBottom: '60px' }}
+      />
     </div>
   )
 }
@@ -329,7 +361,13 @@ const ColorRow: React.FC<{ chars: string }> = ({ chars }) => {
             </span>
           )
 
-        return <span key={i} className="square" style={{ backgroundColor: color, border: '1px solid black' }}></span>
+        return (
+          <span
+            key={i}
+            className="square"
+            style={{ backgroundColor: color, border: '1px solid black' }}
+          ></span>
+        )
       })}
     </div>
   )
