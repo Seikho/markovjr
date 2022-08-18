@@ -17,6 +17,12 @@ type Props = {
   outcome: string
 }
 
+type FormModel = {
+  type: '2d'
+  grid: [number, number]
+  rules: string[]
+}
+
 export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, initialModel, outcome }) => {
   const [savedModels, setSavedModels] = React.useState<SavedModels>(loadModels())
   const [width, setWidth] = React.useState(initialModel.grid.input[0].length)
@@ -108,6 +114,14 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
     }
 
     return model
+  }
+
+  const toFormModel = (): FormModel => {
+    return {
+      type: '2d',
+      grid: [width, height],
+      rules: rules.filter((r) => !!r).filter((r) => r.split('=')[0] !== r.split('=')[1]),
+    }
   }
 
   const callGenerate = (existing?: Model) => {
@@ -210,7 +224,7 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
           ))}
           <SequenceColors rules={selectedRules} />
           <Output
-            model={sanitiseInputs()}
+            model={toFormModel()}
             outcome={outcome}
             onImport={(json) => {
               const model = JSON.parse(json)
@@ -225,13 +239,13 @@ export const ModelForm: React.FC<Props> = ({ generate, mode, setMode, current, i
   )
 }
 
-const Output: React.FC<{ model: Model; outcome: string; onImport: (mode: string) => void }> = ({
+const Output: React.FC<{ model: FormModel; outcome: string; onImport: (mode: string) => void }> = ({
   model,
   onImport,
   outcome,
 }) => {
   const json = JSON.stringify(
-    { type: model.type, rules: model.rules, grid: [model.grid.input[0].length, model.grid.input.length] },
+    { type: model.type, rules: model.rules, grid: [model.grid[0] ?? 0, model.grid[1] ?? 0] },
     null,
     2
   )
