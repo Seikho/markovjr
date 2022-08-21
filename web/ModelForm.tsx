@@ -254,6 +254,7 @@ export const ModelForm: React.FC<Props> = ({
               setWidth(model.grid[0])
               setHeight(model.grid[1])
               setRules(model.rules)
+              setStart(model.start || 'B')
             }}
           />
         </div>
@@ -281,20 +282,24 @@ const Output: React.FC<{ model: FormModel; outcome: string; onImport: (mode: str
 
   return (
     <div>
-      <div>
-        <button onClick={() => onImport(imp)}>Import</button>
-        <input defaultValue="" onChange={(ev) => setImport(ev.target.value)} />
+      <div style={{ display: 'flex', width: '100%' }}>
+        <button onClick={() => onImport(imp)}>Import Model</button>
+        <textarea
+          defaultValue=""
+          onChange={(ev) => setImport(ev.target.value)}
+          style={{ minHeight: 40, width: '90%' }}
+        />
       </div>
 
-      <div>
+      <div style={{ marginTop: '16px' }}>
+        <button onClick={() => navigator.clipboard.writeText(json)}>Copy Model to Clipboard</button>
         <pre>{json}</pre>
       </div>
 
-      <textarea
-        readOnly
-        value={outcome}
-        style={{ minHeight: '60px', width: '100%', marginBottom: '60px' }}
-      />
+      <div style={{ display: 'flex', marginBottom: '10px' }}>
+        <button onClick={() => navigator.clipboard.writeText(outcome)}>Copy to Clipboard</button>
+        <textarea readOnly value={outcome} style={{ minHeight: '100px', width: '100%' }} />
+      </div>
     </div>
   )
 }
