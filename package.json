@@ -11,8 +11,8 @@
     "bundle": "esbuild web/index.tsx web/grids.ts --sourcemap --minify --bundle --outdir=dist",
     "watch": "esbuild web/index.tsx --sourcemap --bundle --outdir=dist --watch",
     "watch:docs": "esbuild web/index.tsx web/grids.ts --sourcemap --minify --bundle --outdir=docs --watch",
-    "watch:worker": "esbuild build/web/index.js build/web/grids.js --sourcemap --minify --bundle --outdir=dist --watch",
-    "serve": "concurrently -c bgBlack,bgBlue,bgBlue,bgRed,bgRed -n http,tsc,es,docs,wkr \"yarn http-server -c-1 -o=index.html\" \"yarn build\" \"yarn watch\" \"yarn watch:docs\" \"yarn watch:worker\""
+    "watch:worker": "esbuild web/index.tsx web/grids.ts --sourcemap --minify --bundle --outdir=dist --watch",
+    "serve": "concurrently -c bgBlack,bgBlue,bgBlue,bgRed,bgRed -n http,tsc,es,docs,wkr \"yarn http-server -c-1 -o=index.html\" \"yarn build -w\" \"yarn watch\" \"yarn watch:docs\" \"yarn watch:worker\""
   },
   "keywords": [],
   "author": "",

@@ -15,8 +15,6 @@ import {
   ValidModel3D,
 } from './types'
 
-const VALID_GRID = /[BIPENDAWROYGUSKF\ /]+/
-
 export function validateGrid(model: Model) {
   for (let i = 0; i < model.rules.length; i++) {
     const rules = model.rules[i]
@@ -29,10 +27,6 @@ export function validateGrid(model: Model) {
   if (model.type === '2d') {
     const length = model.grid.input[0].length
     for (const input of model.grid.input) {
-      if (!VALID_GRID.test(input)) {
-        throw new Error(`Grid row contains invalid characters. May only contain "BIPENDAWROYGUSKF" `)
-      }
-
       if (input.length !== length) {
         throw new Error('2D grid is not uniform')
       }
@@ -43,10 +37,6 @@ export function validateGrid(model: Model) {
     const length = model.grid.input[0][0].length
     for (const y of model.grid.input)
       for (const input of y) {
-        if (!VALID_GRID.test(input)) {
-          throw new Error(`Grid row contains invalid characters. May only contain "BIPENDAWROYGUSKF" `)
-        }
-
         if (input.length !== length) {
           throw new Error('3D grid is not uniform')
         }
@@ -130,7 +120,7 @@ function findMatchesAt2D(model: ValidModel2D, { from }: Rule, x: number, y: numb
       if (isYshift(char)) char = from[++i]
 
       if (model.unions[char] && model.unions[char].has(model.grid.input[curr.y][curr.x])) {
-        break
+        continue
       }
 
       if (char !== '*' && char !== model.grid.input[curr.y][curr.x]) {
@@ -181,7 +171,13 @@ function findMatchesAt3D(model: ValidModel3D, { from }: Rule, x: number, y: numb
   return matches
 }
 
-function next2D(inputs: Input2D, start: Point2D, curr: Point2D, dir: Dir2D, char: string): Point2D | undefined {
+function next2D(
+  inputs: Input2D,
+  start: Point2D,
+  curr: Point2D,
+  dir: Dir2D,
+  char: string
+): Point2D | undefined {
   let point: Point2D | undefined
 
   if (isYshift(char)) {
@@ -241,7 +237,13 @@ function shift2D(start: Point2D, curr: Point2D, dir: Dir2D) {
   return point
 }
 
-function next3D(inputs: Input3D, start: Point3D, curr: Point3D, dir: Dir3D, char: string): Point3D | undefined {
+function next3D(
+  inputs: Input3D,
+  start: Point3D,
+  curr: Point3D,
+  dir: Dir3D,
+  char: string
+): Point3D | undefined {
   let point: Point3D | undefined
 
   if (isYshift(char)) {
