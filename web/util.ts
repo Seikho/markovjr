@@ -64,22 +64,32 @@ export type ViewControls = {
 }
 
 const threeColor: { [char in Color]: THREE.Color } = {
-  B: new THREE.Color(hexColor.B),
-  I: new THREE.Color(hexColor.I),
-  P: new THREE.Color(hexColor.P),
-  E: new THREE.Color(hexColor.E),
-  N: new THREE.Color(hexColor.N),
-  D: new THREE.Color(hexColor.D),
   A: new THREE.Color(hexColor.A),
-  W: new THREE.Color(hexColor.W),
-  R: new THREE.Color(hexColor.R),
-  O: new THREE.Color(hexColor.O),
-  Y: new THREE.Color(hexColor.Y),
-  G: new THREE.Color(hexColor.G),
-  U: new THREE.Color(hexColor.U),
-  S: new THREE.Color(hexColor.S),
-  K: new THREE.Color(hexColor.K),
+  B: new THREE.Color(hexColor.B),
+  C: new THREE.Color(hexColor.C),
+  D: new THREE.Color(hexColor.D),
+  E: new THREE.Color(hexColor.E),
   F: new THREE.Color(hexColor.F),
+  G: new THREE.Color(hexColor.G),
+  H: new THREE.Color(hexColor.H),
+  I: new THREE.Color(hexColor.I),
+  J: new THREE.Color(hexColor.J),
+  K: new THREE.Color(hexColor.K),
+  L: new THREE.Color(hexColor.L),
+  M: new THREE.Color(hexColor.M),
+  N: new THREE.Color(hexColor.N),
+  O: new THREE.Color(hexColor.O),
+  P: new THREE.Color(hexColor.P),
+  Q: new THREE.Color(hexColor.Q),
+  R: new THREE.Color(hexColor.R),
+  S: new THREE.Color(hexColor.S),
+  T: new THREE.Color(hexColor.T),
+  U: new THREE.Color(hexColor.U),
+  V: new THREE.Color(hexColor.V),
+  W: new THREE.Color(hexColor.W),
+  X: new THREE.Color(hexColor.X),
+  Y: new THREE.Color(hexColor.Y),
+  Z: new THREE.Color(hexColor.Z),
 }
 
 export function setup(): ViewControls {
@@ -210,7 +220,11 @@ function getInstanceCount(model: Model) {
 function getPosition(model: Model, x: number, y: number, z: number) {
   if (!dimensions) {
     if (model.type === '2d') {
-      dimensions = new THREE.Vector3(model.grid.input[0].length * SIZE, model.grid.input.length * SIZE, SIZE)
+      dimensions = new THREE.Vector3(
+        model.grid.input[0].length * SIZE,
+        model.grid.input.length * SIZE,
+        SIZE
+      )
     } else {
       dimensions = new THREE.Vector3(
         model.grid.input[0][0].length * SIZE,

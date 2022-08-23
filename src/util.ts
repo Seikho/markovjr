@@ -21,22 +21,32 @@ export const terminal: { [char in Color]: chalk.Chalk } = {
 }
 
 export const hexColor: { [char in Color]: number } = {
-  B: 0x000000,
-  I: 0x222e53,
-  P: 0x7d2953,
-  E: 0x008551,
-  N: 0xa95238,
-  D: 0x5f5750,
   A: 0xe6e6e6,
-  W: 0xfff1e8,
-  R: 0xff074e,
-  O: 0xffa108,
-  Y: 0xfeeb2c,
-  G: 0x00e339,
-  U: 0x2cabfe,
-  S: 0x82759a,
-  K: 0xff76a6,
+  B: 0x000000,
+  C: 0x92eb34,
+  D: 0x5f5750,
+  E: 0x184a01,
   F: 0xffcaa8,
+  G: 0x50fc00,
+  H: 0x8934eb,
+  I: 0x222e53,
+  J: 0x3a4142,
+  K: 0xff76a6,
+  L: 0xd694c2,
+  M: 0xde7d57,
+  N: 0xa95238,
+  O: 0xffa108,
+  P: 0x7d2953,
+  Q: 0x85472e,
+  R: 0xff074e,
+  S: 0x82759a,
+  T: 0x968a84,
+  U: 0x2cabfe,
+  V: 0xff8ff6,
+  W: 0xfff1e8,
+  X: 0xb0b0b0,
+  Y: 0xfeeb2c,
+  Z: 0x215963,
 }
 
 export const webColors = Object.entries(hexColor).reduce((prev, [key, hex]) => {
@@ -45,10 +55,8 @@ export const webColors = Object.entries(hexColor).reduce((prev, [key, hex]) => {
 }, {} as { [char: string]: string })
 
 if (typeof window !== 'undefined') {
-  const colors = Object.keys(terminal).sort((l, r) => (l > r ? 1 : -1)) as Color[]
-  for (const key of colors) {
-    const color = terminal[key](webColors[key])
-    console.log(`${key}: %c           `, `background: ${color};`)
+  for (const [key, color] of Object.entries(hexColor)) {
+    console.log(`${key}: %c           `, `background: #${color.toString(16)};`)
   }
 }
 
@@ -60,7 +68,10 @@ export function reset(text: string) {
   return chalk.reset(text)
 }
 
-export function iterate2D(model: Model2D, iterator: (x: number, y: number, color: Color) => void): Model2D {
+export function iterate2D(
+  model: Model2D,
+  iterator: (x: number, y: number, color: Color) => void
+): Model2D {
   for (let y = 0; y < model.grid.input.length; y++) {
     for (let x = 0; x < model.grid.input[0].length; x++) {
       iterator(x, y, model.grid.input[y][x] as Color)
@@ -70,7 +81,10 @@ export function iterate2D(model: Model2D, iterator: (x: number, y: number, color
   return model
 }
 
-export function iterate3D(model: Model3D, iterator: (x: number, y: number, z: number, color: Color) => void): Model3D {
+export function iterate3D(
+  model: Model3D,
+  iterator: (x: number, y: number, z: number, color: Color) => void
+): Model3D {
   for (let z = 0; z < model.grid.input.length; z++) {
     for (let y = 0; y < model.grid.input[0].length; y++) {
       for (let x = 0; x < model.grid.input[0][0].length; x++) {

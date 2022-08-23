@@ -44,7 +44,7 @@ export type Shift = '/'
 export type Match2D = { x: number; y: number; dir: Dir2D }
 export type Match3D = { x: number; y: number; z: number; dir: Dir3D }
 
-export type Color = 'B' | 'I' | 'P' | 'E' | 'N' | 'D' | 'A' | 'W' | 'R' | 'O' | 'Y' | 'G' | 'U' | 'S' | 'K' | 'F'
+export type Color = string
 
 export type OnDone = (model: ValidModel) => any
 
